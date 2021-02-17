@@ -1,0 +1,104 @@
+---
+title: "Survival Curves"
+author: "Jessica George and Shawna Tuli"
+date: "12/27/2020"
+output: html_document
+---
+
+Libraries
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(table1)
+library(survival)
+library(finalfit)
+library(survminer)
+library(forestmodel)
+
+# Check for collinearity using vif()
+library(rms)
+```
+
+Data Creation
+```{r message=FALSE, warning=FALSE}
+data <- read_csv("../data/data.csv") %>% 
+  mutate(
+    time_alive_years = time_alive/365,
+    chemo_rad = factor(
+                  case_when(
+                      (eqd2 > 0 & total_chemo_received %in% c(1, 2, 3, 4, 5, 6, 7)) ~ "CRT", 
+                      (eqd2 > 0 & total_chemo_received == 0) ~ "RT"))
+  )
+
+```
+
+1) Survival by HIV status
+```{r}
+hiv_survival <- survfit(Surv(time_alive_years, vital_status) ~ hiv_status, data)
+
+hiv_plot <- ggsurvplot(fit = hiv_survival,
+  data,
+  xlab = "Years since first day of chemoradiation", 
+  ylab = "Proportion surviving",
+  title = "Kaplan-Meier Survival Estimates by HIV Status",
+  break.time.by = 1,
+  palette = c("#0000FF", "#FF0000"),
+  conf.int = FALSE,
+  censor = TRUE,
+  legend.title="",
+  legend.labs = c("HIV-uninfected", "HIV-infected"),
+  risk.table = TRUE,
+  risk.table.height = 0.2,
+  tables.theme = theme_cleantable())
+hiv_plot$plot <- hiv_plot$plot +
+  theme(plot.title = element_text(hjust = 0.4), panel.grid.major.y = element_line(color = "#EAF2F3"), plot.background = element_rect(fill = "#EAF2F3"), axis.title.y = element_text(vjust = -15))
+hiv_plot$table <- hiv_plot$table + theme(plot.title = element_text(hjust = -0.33, size = 14), plot.background = element_rect(fill = "#EAF2F3"), panel.background = element_rect(fill = "#EAF2F3"))
+hiv_plot
+```
+
+2) Survival by chemoradiation therapy
+```{r}
+chemo_rad_survival <- survfit(Surv(time_alive_years, vital_status) ~ chemo_rad, data)
+
+chemo_rad_plot <- ggsurvplot(fit = chemo_rad_survival,
+  data,
+  xlab = "Years since first day of chemoradiation", 
+  ylab = "Proportion surviving",
+  title = "Kaplan-Meier Survival Estimates by CRT",
+  break.time.by = 1,
+  palette = c("#0000FF", "#FF0000"),
+  conf.int = FALSE,
+  censor = TRUE,
+  legend.title = "",
+  legend.labs = c("CRT", "RT"),
+  risk.table = TRUE,
+  risk.table.height = 0.2,
+  tables.theme = theme_cleantable())
+chemo_rad_plot$plot <- chemo_rad_plot$plot +
+  theme(plot.title = element_text(hjust = 0.5), panel.grid.major.y = element_line(color = "#EAF2F3"), plot.background = element_rect(fill = "#EAF2F3"), axis.title.y = element_text(vjust = 1))
+chemo_rad_plot$table <- chemo_rad_plot$table + theme(plot.title = element_text(hjust = -0.12, size = 14), plot.background = element_rect(fill = "#EAF2F3"), panel.background = element_rect(fill = "#EAF2F3"))
+chemo_rad_plot
+```
+
+3) Survival by HIV status and chemoradiation therapy
+```{r}
+hiv_chemo_rad_survival <- survfit(Surv(time_alive_years, vital_status) ~ hiv_status + chemo_rad, data)
+
+hiv_chemo_rad_plot <- ggsurvplot(fit = hiv_chemo_rad_survival,
+  data,
+  xlab = "Years since first day of chemoradiation", 
+  ylab = "Proportion surviving",
+  title = "Kaplan-Meier Survival Estimates by HIV Status & CRT",
+  break.time.by = 1,
+  palette = c("darkred", "red", "blue", "darkblue"),
+  conf.int = FALSE,
+  censor = TRUE,
+  legend.title = "",
+  legend.labs = c("HIV+&CRT", "HIV+&RT", "HIV-&CRT", "HIV-&RT"),
+  risk.table = TRUE,
+  risk.table.height = 0.3,
+  tables.theme = theme_cleantable())
+hiv_chemo_rad_plot$plot <- hiv_chemo_rad_plot$plot +
+  theme(plot.title = element_text(hjust = 0.7), panel.grid.major.y = element_line(color = "#EAF2F3"), plot.background = element_rect(fill = "#EAF2F3"), axis.title.y = element_text(vjust = -10))
+hiv_chemo_rad_plot$table <- hiv_chemo_rad_plot$table + theme(plot.title = element_text(hjust = -0.24, size = 14), plot.background = element_rect(fill = "#EAF2F3"), panel.background = element_rect(fill = "#EAF2F3"))
+hiv_chemo_rad_plot
+```
