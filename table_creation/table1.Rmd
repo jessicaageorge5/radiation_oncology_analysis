@@ -8,7 +8,7 @@ output: html_document
 Libraries
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
-library(table1)
+library(Table1)
 library(survival)
 library(finalfit)
 library(survminer)
@@ -22,12 +22,12 @@ Data Creation
 ```{r message=FALSE, warning=FALSE}
 data <- read_csv("../data/data.csv") %>% 
   mutate(
-    hiv_status = relevel(factor(hiv_status, levels = c(1, 0, 2), labels = c("HIV-infected", "HIV-uninfected", "<i>P</i>")), ref = "HIV-uninfected"),
+    hiv_status = factor(hiv_status, levels = c(1, 0), labels = c("HIV-infected", "HIV-uninfected")),
     age_cat = factor(age_cat, levels = c(1, 2, 3), labels = c("21-39", "40-59", ">60")),
     marital = factor(marital, levels = c(3, 1, 2), labels = c("Single", "Married/partnered", "Divorced/widowed")),
     cancer_screening = factor(cancer_screening, levels = c(0, 1), labels = c("No", "Yes")),
-    combined_cancer_stage = factor(combined_cancer_stage, levels = c(1, 2, 3, 4), labels = c("I (IB1*, IB2)", "II (IIA, IIB)", "III (IIIA, IIIB)", "IV")),
-    vaginal_bleeding_symp = factor(vaginal_bleeding_symp, levels = c(0, 1), labels = c("No", "Yes")),
+    combined_cancer_stage = factor(combined_cancer_stage, levels = c(1, 2, 3, 4), labels = c("I (IB1*, IB2)", "II (IIA, IIB)", "III-IV (IIIA, IIIB, IV)", "III-IV (IIIA, IIIB, IV)")),
+    vaginal_hemorrhage_symp = factor(vaginal_hemorrhage_symp, levels = c(0, 1), labels = c("No", "Yes")),
     vaginal_discharge_symp = factor(vaginal_discharge_symp, levels = c(0, 1), labels = c("No", "Yes")),
     pelvic_pain_symp = factor(pelvic_pain_symp, levels = c(0, 1), labels = c("No", "Yes")),
     init_performance_status = factor(case_when(as.numeric(init_performance_status) >= 90 ~ 1, 
@@ -50,29 +50,29 @@ label(data$enroll_age) <- "Age"
 label(data$age_cat) <- ""
 units(data$enroll_age) <- "y"
 label(data$marital) <- "Marital status"
-label(data$cancer_screening) <- "Previously screened <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for cervical cancer"
-label(data$distance) <- "Distance from treatment <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;facility"
+label(data$cancer_screening) <- "Previously screened for cervical cancer"
+label(data$distance) <- "Distance from treatment facility"
 units(data$distance) <- "km"
 label(data$combined_cancer_stage) <- "Disease stage"
-label(data$yn_vaginal_bleeding) = "Symptoms at presentation<br>&nbsp;&nbsp;&nbsp;&nbsp;Vaginal bleeding"
-label(data$yn_vaginal_discharge) = "&nbsp;&nbsp;&nbsp;&nbsp;Vaginal discharge"
-label(data$yn_pelvic_back_pain) = "&nbsp;&nbsp;&nbsp;&nbsp;Pelvic/back pain"
-label(data$cr_result) <- "Baseline laboratory values<br>&nbsp;&nbsp;&nbsp;Creatinine"
+label(data$vaginal_hemorrhage_symp) = "Vaginal bleeding"
+label(data$vaginal_discharge_symp) = "Vaginal discharge"
+label(data$pelvic_pain_symp) = "Pelvic/back pain"
+label(data$cr_result) <- "Creatinine"
 units(data$cr_result) <- "&mu;mol/L"
-label(data$hb_result) <- "&nbsp;&nbsp;&nbsp;Hemoglobin"
+label(data$hb_result) <- "Hemoglobin"
 units(data$hb_result) <- "g/dL"
-label(data$neut_result) <- "&nbsp;&nbsp;&nbsp;ANC"
+label(data$neut_result) <- "ANC"
 units(data$neut_result) <- "&times;10<sup>9</sup>/L"
-label(data$wbc_result) <- "&nbsp;&nbsp;&nbsp;WBC count"
+label(data$wbc_result) <- "WBC"
 units(data$wbc_result) <- "&times;10<sup>9</sup>/L"
 label(data$init_performance_status) <- "Baseline performance status"
 units(data$init_performance_status) <- "KPS"
-label(data$cd4_final) <- "HIV characteristics<br>&nbsp;&nbsp;&nbsp;CD4"
+label(data$cd4_final) <- "CD4"
 units(data$cd4_final) <- "cells/&mu;L"
-label(data$cd4_pos_cat) = "&nbsp;&nbsp;&nbsp;CD4 category"
-label(data$on_arv) <- "&nbsp;&nbsp;&nbsp;On ARV"
-label(data$total_chemo_received) <- "Treatment characteristics<br>&nbsp;&nbsp;&nbsp;No. of chemo cycles received"
-label(data$chemo) <- "&nbsp;&nbsp;&nbsp;Chemo/no chemo"
+label(data$cd4_pos_cat) = "CD4 category"
+label(data$on_arv) <- "On ARV"
+label(data$total_chemo_received) <- "No. of chemo cycles received"
+label(data$chemo) <- "Chemo/no chemo"
 label(data$ebrt_40) <- "Received EBRT dose >= 40 Gy"
 label(data$brachy_20) <- "Received brachytherapy dose >= 20 Gy"
 label(data$eqd2_75) <- "Received EQD2 dose >= 75 Gy"
@@ -83,57 +83,44 @@ units(data$treat_duration) <- "d"
 label(data$treat_response) <- "Tumor response"
 ```
 
-Create custom functions to output the right values for each characteristic in Table 1
-```{r}
-rndr_default <- function(x, name, ...) {
-  if (!is.numeric(x)) return(render.categorical.default(x))
-  what <- switch(name,
-        enroll_age = "Median (Q1-Q3)",
-        distance = "Median (Q1-Q3)",
-        cr_result = "Median (Q1-Q3)",
-        hb_result = "Median (Q1-Q3)",
-        neut_result = "Median (Q1-Q3)",
-        wbc_result = "Median (Q1-Q3)",
-        cd4_final = "Median (Q1-Q3)",
-        total_chemo_received = "Median (Q1-Q3)",
-        eqd2 = "Median (Q1-Q3)<br>Mean (SD)",
-        treat_duration = "Median (Q1-Q3)"
-        )
-    parse.abbrev.render.code(c("", what))(x)
-    }
-
-rndr <- function(x, name, ...) {
-        if (length(x) == 0) {
-          y <- data[[name]]
-          s <- rep("", length(rndr_default(x=y, name=name, ...)))
-          if (is.factor(y)) {
-            p <- chisq.test(table(y, droplevels(data$hiv_status)))$p.value
-          }
-          else if (is.numeric(y) & name != "cd4_final") {
-            p = 1
-            try({
-            p <- t.test(y ~ data$hiv_status)$p.value
-            }) }
-          else { p = -1 }
-          
-          if (is.na(p) | p == -1) {
-            s[2] = ""
-          }
-          else {
-            s[2] <- sub("<", "&lt;", format.pval(p, digits=1, eps=0.01))
-          }
-          s
-        } else {
-          rndr_default(x=x, name=name, ...)
-        }
-      }
-      
-      rndr.strat <- function(label, n, ...) {
-        ifelse(n==0, label, render.strat.default(label, n, ...))
-      }
-```
 
 Create Table 1
 ```{r}
-table1(~ enroll_age + age_cat + marital + cancer_screening + distance + combined_cancer_stage + vaginal_bleeding_symp + vaginal_discharge_symp + pelvic_pain_symp + cr_result + hb_result + neut_result + wbc_result + init_performance_status + cd4_final + cd4_pos_cat + on_arv + total_chemo_received + chemo + ebrt_40 + brachy_20 + eqd2_75 + eqd2 + treat_duration + treat_response | hiv_status, data = data, droplevels = F, overall = F, rowlabelhead = "Characteristic", render = rndr, colnames = c("Characteristic", "HIV-infected", "HIV-unifected"), caption = "Table 1", footnote = "IB1 includes patients who have received chemoradiation therapy, excluding those who have received surgery.<br><i>Abbreviations:</i> ANC = absolute neutrophil count; ARV = antiretroviral; EBRT = external beam radiation therapy; EQD2 = radiobiological equivalent dose; KPS = Karofsky performance score; WBC = white blood cells.<br>Values are presented as number (percentage), unless otherwise noted.")
+# Skipping HIV+ only variables: cd4_final, cd4_pos_cat, on_arv... See below for calculations for these variables
+
+make.table(dat = data,
+           strat = "hiv_status",
+           colnames = c("Characteristic", "HIV-infected", "HIV-uninfected", "Overall", "P"),
+           cat.varlist = c("age_cat", "marital", "cancer_screening", "combined_cancer_stage", "vaginal_hemorrhage_symp", "vaginal_discharge_symp", "pelvic_pain_symp", "init_performance_status", "chemo", "ebrt_40", "brachy_20", "eqd2_75", "treat_response"),
+           cat.rmstat = list(c("row"), c("miss")),
+           cat.ptype = "chisq",
+           cont.varlist = c("enroll_age", "distance", "cr_result", "hb_result", "neut_result", "wbc_result", "total_chemo_received", "eqd2", "treat_duration"),
+           cont.ptype = "ttest",
+           cont.rmstat = list(c("", "meansd", ""), c("q1q3")),
+           caption = "Table 1a",
+           footer = "IB1 includes patients who have received chemoradiation therapy, excluding those who have received surgery.<br><i>Abbreviations:</i> ANC = absolute neutrophil count; ARV = antiretroviral; EBRT = external beam radiation therapy; EQD2 = radiobiological equivalent dose; KPS = Karofsky performance score; WBC = white blood cells.<br>Values are presented as number (percentage), unless otherwise noted.",
+           tspanner     = c("",""),
+            n.tspanner   = c(76, 76),
+            cgroup       = c("", "Results by HIV Status", ""),
+            n.cgroup     = c(1, 3, 1),
+            
+           output = "html")
+# cd4_final
+# median
+sapply(select(filter(data, hiv_status == "HIV-infected"), cd4_final), median, na.rm = T)
+# quantiles
+quantile(select(filter(data, hiv_status == "HIV-infected"), cd4_final), probs = c(0.25, 0.75), na.rm = T)
+
+# cd4_pos_cat
+# counts
+data %>% filter(hiv_status == "HIV-infected") %>% group_by(cd4_pos_cat) %>% summarise(n())
+
+# vl_final
+# mean
+sapply(select(filter(data, hiv_status == "HIV-infected"), vl_final), median, na.rm = T)
+# quantiles
+quantile(select(filter(data, hiv_status == "HIV-infected"), vl_final), probs = c(0.25, 0.75), na.rm = T)
+
+# on_arv
+data %>% filter(hiv_status == "HIV-infected") %>% group_by(on_arv) %>% summarise(n())
 ```

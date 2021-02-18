@@ -1,0 +1,49 @@
+---
+title: "Table 1a"
+author: "Jessica George and Shawna Tuli"
+date: "2/17/2021"
+output: html_document
+---
+
+Libraries
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(Table1)
+library(survival)
+library(finalfit)
+library(survminer)
+library(forestmodel)
+
+# Check for collinearity using vif()
+library(rms)
+```
+
+Data Creation
+```{r message=FALSE, warning=FALSE}
+data <- read_csv("../data/data.csv")
+
+tox_cols = c("hiv_status", "pelvic_pain_tox", "vaginal_discharge_tox", "vaginal_hemorrhage_tox", "fatigue_tox", "weight_loss_tox", "nausea_tox", "vomiting_tox", "urine_freq_tox", "urine_incontinence_tox", "urine_urge_tox", "diarrhea_tox", "dermatitis_tox")
+
+data[tox_cols] = lapply(data[tox_cols], factor)
+```
+
+
+```{r}
+make.table(dat = data,
+           strat = "hiv_status",
+           colnames = c("Characteristic", "HIV-uninfected", "HIV-infected", "Overall", "P"),
+           cat.varlist = c("pelvic_pain_tox", "vaginal_discharge_tox", "vaginal_hemorrhage_tox", "fatigue_tox", "weight_loss_tox", "nausea_tox", "vomiting_tox", "urine_freq_tox", "urine_incontinence_tox", "urine_urge_tox", "diarrhea_tox", "dermatitis_tox"),
+           cat.rmstat = list(c("row"), c("miss")),
+           cat.ptype = "chisq",
+           cont.varlist = c("cr_result_tox", "hb_min_result_tox", "wbc_min_result_tox", "neut_min_result_tox", "alb_min_result_tox"),
+           cont.ptype = "ttest",
+           cont.rmstat = list(c("meansd"), c("q1q3")),
+           caption = "Table 1a",
+           footer = "",
+           tspanner     = c("",""),
+            n.tspanner   = c(66, 66),
+            cgroup       = c("", "Results by HIV Status", ""),
+            n.cgroup     = c(1, 3, 1),
+            
+           output = "html")
+```
