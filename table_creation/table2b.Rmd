@@ -21,6 +21,7 @@ library(rms)
 Data Creation
 ```{r message=FALSE, warning=FALSE}
 data <- read_csv("../data/data.csv") %>% 
+  filter(surgery == 0) %>% 
   mutate(
     total_chemo_received_0 = factor(forcats::fct_recode(factor(total_chemo_received), "0" = "0", "1" = "1", "1" = "2", "1" = "3", "1" = "4", "1" = "5", "1" = "6", "1" = "7"), labels = c("0", ">0")),
     total_chemo_received_4 = factor(forcats::fct_recode(factor(total_chemo_received), "0" = "0", "0" = "1", "0" = "2", "0" = "3", "1" = "4", "1" = "5", "1" = "6", "1" = "7"), labels = c("<4", ">=4")),

@@ -22,21 +22,33 @@ Data Creation
 ```{r message=FALSE, warning=FALSE}
 data <- read_csv("../data/data.csv") %>% 
   mutate(
-    time_alive_years = time_alive/365,
+    time_alive = time_alive/365,
     chemo_rad = factor(
                   case_when(
                       (eqd2 > 0 & total_chemo_received %in% c(1, 2, 3, 4, 5, 6, 7)) ~ "CRT", 
                       (eqd2 > 0 & total_chemo_received == 0) ~ "RT"))
   )
 
+non_surgery_patients <- data %>% 
+  filter(surgery == 0)
 ```
 
-1) Survival by HIV status
+KMs on All Patients
+1) Survival status by stage
 ```{r}
-hiv_survival <- survfit(Surv(time_alive_years, vital_status) ~ hiv_status, data)
+survfit(Surv(time_alive, vital_status) ~) 
+```
+
+2) Survival status by HIV status and stage
+
+
+KMs on Non-Surgery Patients
+1) Survival by HIV status -- Non-surgery
+```{r}
+hiv_survival <- survfit(Surv(time_alive, vital_status) ~ hiv_status, non_surgery_patients)
 
 hiv_plot <- ggsurvplot(fit = hiv_survival,
-  data,
+  non_surgery_patients,
   xlab = "Years since first day of chemoradiation", 
   ylab = "Proportion surviving",
   title = "Kaplan-Meier Survival Estimates by HIV Status",
@@ -55,12 +67,12 @@ hiv_plot$table <- hiv_plot$table + theme(plot.title = element_text(hjust = -0.33
 hiv_plot
 ```
 
-2) Survival by chemoradiation therapy
+2) Survival by chemoradiation therapy -- Non-surgery
 ```{r}
-chemo_rad_survival <- survfit(Surv(time_alive_years, vital_status) ~ chemo_rad, data)
+chemo_rad_survival <- survfit(Surv(time_alive, vital_status) ~ chemo_rad, non_surgery_patients)
 
 chemo_rad_plot <- ggsurvplot(fit = chemo_rad_survival,
-  data,
+  non_surgery_patients,
   xlab = "Years since first day of chemoradiation", 
   ylab = "Proportion surviving",
   title = "Kaplan-Meier Survival Estimates by CRT",
@@ -81,10 +93,10 @@ chemo_rad_plot
 
 3) Survival by HIV status and chemoradiation therapy
 ```{r}
-hiv_chemo_rad_survival <- survfit(Surv(time_alive_years, vital_status) ~ hiv_status + chemo_rad, data)
+hiv_chemo_rad_survival <- survfit(Surv(time_alive, vital_status) ~ hiv_status + chemo_rad, non_surgery_patients)
 
 hiv_chemo_rad_plot <- ggsurvplot(fit = hiv_chemo_rad_survival,
-  data,
+  non_surgery_patients,
   xlab = "Years since first day of chemoradiation", 
   ylab = "Proportion surviving",
   title = "Kaplan-Meier Survival Estimates by HIV Status & CRT",

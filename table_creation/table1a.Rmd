@@ -20,7 +20,8 @@ library(rms)
 
 Data Creation
 ```{r message=FALSE, warning=FALSE}
-data <- read_csv("../data/data.csv")
+data <- read_csv("../data/data.csv") %>% 
+  filter(surgery == 0)
 
 tox_cols = c("hiv_status", "pelvic_pain_tox", "vaginal_discharge_tox", "vaginal_hemorrhage_tox", "fatigue_tox", "weight_loss_tox", "nausea_tox", "vomiting_tox", "urine_freq_tox", "urine_incontinence_tox", "urine_urge_tox", "diarrhea_tox", "dermatitis_tox")
 

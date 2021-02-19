@@ -21,6 +21,7 @@ library(rms)
 Data Creation
 ```{r message=FALSE, warning=FALSE}
 data <- read_csv("../data/data.csv") %>% 
+  filter(surgery == 0) %>% 
   mutate(
     age_cat = factor(age_cat, levels = c(1, 2, 3), labels = c("21-39", "40-59", ">60")),
     hiv_status = factor(hiv_status, levels = c(0, 1), labels = c("HIV-uninfected", "HIV-infected")),
