@@ -28,7 +28,12 @@ data <- read_csv("../data/data.csv") %>%
     total_chemo_received_0 = factor(forcats::fct_recode(factor(total_chemo_received), "0" = "0", "1" = "1", "1" = "2", "1" = "3", "1" = "4", "1" = "5", "1" = "6", "1" = "7"), labels = c("0", ">0")),
     total_chemo_received_4 = factor(forcats::fct_recode(factor(total_chemo_received), "0" = "0", "0" = "1", "0" = "2", "0" = "3", "1" = "4", "1" = "5", "1" = "6", "1" = "7"), labels = c("<4", ">=4")),
     combined_cancer_stage = factor(combined_cancer_stage, levels = c(1, 2, 3, 4), labels = c("I (IB1*, IB2)", "II (IIA, IIB)", "III (IIIA, IIIB)", "IV")),
-    time_alive_years = time_alive/365
+    time_alive_years = time_alive/365,
+    cd4_cat = factor(case_when(hiv_status == "HIV-uninfected" ~ 1,
+                               hiv_status == "HIV-infected" & cd4_final >= 500 ~ 2, 
+                               hiv_status == "HIV-infected" & cd4_final >= 350 & cd4_final < 500 ~ 3,
+                               hiv_status == "HIV-infected" & cd4_final >= 200 & cd4_final < 350 ~ 4,
+                               hiv_status == "HIV-infected" & cd4_final < 200 ~ 5), levels = c(1,2,3,4))
   )
 
 label(data$age_cat) <- "Age"
@@ -105,17 +110,27 @@ Create Table 2
 ```{r}
 explanatory <- c("age_cat", "hiv_status", "hb_result", "combined_cancer_stage", "total_chemo_received_4", "eqd2")
 
+# Adding cd4_cat
+explanatory2 <- c("age_cat", "hiv_status", "hb_result", "cd4_cat", "combined_cancer_stage", "total_chemo_received_4", "eqd2")
+
 dependent <- "Surv(time_alive, vital_status)"
 
 # Table with chemo cycles (<4 & >=4)
 data %>% 
   finalfit(dependent, explanatory) %>% 
   knitr::kable()
+
+# data %>% 
+#   finalfit(dependent, explanatory2) %>% 
+#   knitr::kable()
 ```
 
 Run whole population Cox model on HIV-infected and HIV-uninfected subpopulations
 ```{r}
 stratified_explanatory <- c("age_cat", "hb_result", "combined_cancer_stage", "total_chemo_received_4", "eqd2")
+
+# Adding cd4_cat
+stratified_explanatory2 <- c("age_cat", "hb_result", "cd4_cat", "combined_cancer_stage", "total_chemo_received_4", "eqd2")
 
 # HIV Pos
 data %>% 
@@ -123,11 +138,23 @@ data %>%
   finalfit(dependent, stratified_explanatory) %>% 
   knitr::kable()
 
+# Adding cd4_cat
+# data %>% 
+#   filter(hiv_status == "HIV-infected") %>% 
+#   finalfit(dependent, stratified_explanatory2) %>% 
+#   knitr::kable()
+
 # HIV Neg
 data %>% 
   filter(hiv_status == "HIV-uninfected") %>% 
   finalfit(dependent, stratified_explanatory) %>% 
   knitr::kable()
+
+# Adding cd4_cat 
+# data %>% 
+#   filter(hiv_status == "HIV-uninfected") %>% 
+#   finalfit(dependent, stratified_explanatory2) %>% 
+#   knitr::kable()
 
 ## Also try combining stages 3 & 4
 data_combined34stage <- data %>% 
@@ -138,15 +165,32 @@ data_combined34stage %>%
   finalfit(dependent, explanatory) %>% 
   knitr::kable()
 
+# Adding cd4_cat
+data_combined34stage %>% 
+  finalfit(dependent, explanatory2) %>% 
+  knitr::kable()
+
 # HIV Pos
 data_combined34stage %>% 
   filter(hiv_status == "HIV-infected") %>% 
   finalfit(dependent, stratified_explanatory) %>% 
   knitr::kable()
 
+# Adding cd4_cat
+data_combined34stage %>% 
+  filter(hiv_status == "HIV-infected") %>% 
+  finalfit(dependent, stratified_explanatory2) %>% 
+  knitr::kable()
+
 # HIV Neg
 data_combined34stage %>% 
   filter(hiv_status == "HIV-uninfected") %>% 
   finalfit(dependent, stratified_explanatory) %>% 
+  knitr::kable()
+
+# Adding cd4_cat
+data_combined34stage %>% 
+  filter(hiv_status == "HIV-uninfected") %>% 
+  finalfit(dependent, stratified_explanatory2) %>% 
   knitr::kable()
 ```
