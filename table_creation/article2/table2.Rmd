@@ -1,0 +1,469 @@
+---
+title: "Table 4"
+author: "Jessica George and Shawna Tuli"
+date: "2/25/2021"
+output: html_document
+---
+
+Libraries
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(survival)
+library(finalfit)
+library(Table1)
+```
+
+Article 2
+Data Creation
+```{r message=FALSE, warning=FALSE}
+data <- read_csv("../data/data.csv") %>% 
+  filter(surgery == 0) %>% 
+  mutate(
+    hiv_status = factor(hiv_status, levels = c(1, 0), labels = c("HIV-infected", "HIV-uninfected")),
+    age_cat = factor(age_cat, levels = c(1, 2, 3), labels = c("21-39", "40-59", ">60")),
+    marital = factor(marital, levels = c(3, 1, 2), labels = c("Single", "Married/partnered", "Divorced/widowed")),
+    cancer_screening = factor(cancer_screening, levels = c(0, 1), labels = c("No", "Yes")),
+    combined_cancer_stage = factor(combined_cancer_stage, levels = c(1, 2, 3, 4), labels = c("I (IB1*, IB2)", "II (IIA, IIB)", "III-IV (IIIA, IIIB, IV)", "III-IV (IIIA, IIIB, IV)")),
+    vaginal_hemorrhage_symp = factor(vaginal_hemorrhage_symp, levels = c(0, 1), labels = c("No", "Yes")),
+    vaginal_discharge_symp = factor(vaginal_discharge_symp, levels = c(0, 1), labels = c("No", "Yes")),
+    pelvic_pain_symp = factor(pelvic_pain_symp, levels = c(0, 1), labels = c("No", "Yes")),
+    init_performance_status = factor(case_when(as.numeric(init_performance_status) >= 90 ~ 1, 
+                          as.numeric(init_performance_status) < 90 ~ 0), levels = c(1, 0), labels = c(">=90", "<90")),
+    cd4_pos_cat = factor(case_when(hiv_status == "HIV-infected" & cd4_final >= 500 ~ 1, 
+                          hiv_status == "HIV-infected" & cd4_final >= 350 & cd4_final < 500 ~ 2,
+                          hiv_status == "HIV-infected" & cd4_final < 350 ~ 3), levels = c(1, 2, 3), labels = c(">=500", ">=350-<500", "<350")),
+    cd4_pos_cat2 = factor(case_when(hiv_status == "HIV-infected" & cd4_final >= 500 ~ 1, 
+                          hiv_status == "HIV-infected" & cd4_final >= 350 & cd4_final < 500 ~ 2,
+                          hiv_status == "HIV-infected" & cd4_final >= 200 & cd4_final < 350 ~ 3,
+                          hiv_status == "HIV-infected" & cd4_final < 200 ~ 4), levels = c(1, 2, 3, 4), labels = c(">=500", ">=350-<500", ">=200-<350", "<200")),
+    on_arv = factor(on_arv, levels = c(0, 1), labels = c("No", "Yes")),
+    chemo = factor(chemo, levels = c(0, 1), labels = c("0", ">=1")),
+    ebrt_40 = factor(case_when(ebrt_curr_dose >= 40 ~ 1, 
+                               ebrt_curr_dose < 40 ~ 0), levels = c(0, 1), labels = c("No", "Yes")),
+    brachy_20 = factor(case_when(brachy_curr_dose >= 20 ~ 1, 
+                                 brachy_curr_dose < 20 ~ 0), levels = c(0, 1), labels = c("No", "Yes")),
+    eqd2_75 = factor(case_when(eqd2 >= 75 ~ 1,
+                               eqd2 < 75 ~ 0), levels = c(0, 1), labels = c("No", "Yes")),
+    treat_response = factor(as.numeric(treat_response), levels = c(1, 2, 5), labels = c("Complete", "Partial", "Not available")),
+    vl_detect = factor(case_when(vl_final < 400 ~ 0,
+                                 vl_final >= 400 ~ 1), levels = c(0, 1), labels = c("Undetectable", "Detectable")),
+    total_chemo_received_4 = factor(forcats::fct_recode(factor(total_chemo_received), "0" = "0", "0" = "1", "0" = "2", "0" = "3", "1" = "4", "1" = "5", "1" = "6", "1" = "7"), labels = c("<4", ">=4")),
+    tdf = factor(tdf),
+    azt = factor(case_when(hiv_status == "HIV-uninfected" ~ 0,
+                           azt == 1 ~ 1,
+                           hiv_status == "HIV-infected" & is.na(azt) ~ 0)),
+    chemo_rt = factor(case_when(chemo == ">=1" & eqd2 > 0 ~ 1,
+                      chemo == "0" & eqd2 > 0 ~ 0)),
+    treatment_type = factor(case_when(chemo == ">=1" & eqd2 > 0 ~ 1,
+                                      chemo == "0" & eqd2 > 0 ~ 2)))
+
+data$hiv_status <- relevel(data$hiv_status, ref = "HIV-uninfected")
+```
+
+Create response variables
+```{r}
+data <- data %>%
+  mutate(
+    hb_response = factor(case_when(
+      hb_tox_grade <= 1 ~ 0,
+      hb_tox_grade > 1 ~ 1
+    )),
+    cr_response = factor(case_when(
+      cr_tox_grade <= 1 ~ 0,
+      cr_tox_grade > 1 ~ 1
+    )),
+    neut_response = factor(case_when(
+      neut_tox_grade <= 1 ~ 0,
+      neut_tox_grade > 1 ~ 1
+    )),
+    wbc_response = factor(case_when(
+      wbc_tox_grade <= 1 ~ 0,
+      wbc_tox_grade > 1 ~ 1
+    )),
+    alb_response = factor(case_when(
+      alb_tox_grade <= 1 ~ 0,
+      alb_tox_grade > 1 ~ 1
+    )),
+    GI_response = factor(case_when(
+      nausea_tox <= 1 | vomiting_tox <= 1 | diarrhea_tox <= 1 ~ 0,
+      nausea_tox > 1 | vomiting_tox > 1 | diarrhea_tox > 1 ~ 1
+    )),
+    GU_response = factor(case_when(
+      urine_freq_tox <= 1 | urine_incontinence_tox <= 1 | urine_urge_tox <= 1 ~ 0,
+      urine_freq_tox > 1 | urine_incontinence_tox > 1 | urine_urge_tox > 1 ~ 1
+    )),
+    vaginal_response = factor(case_when(
+      vaginal_hemorrhage_tox <= 1 | vaginal_discharge_tox <= 1 | pelvic_pain_tox <= 1 ~ 0,
+      vaginal_hemorrhage_tox > 1 | vaginal_discharge_tox > 1 | pelvic_pain_tox > 1 ~ 1
+    )),
+    fatigue_response = factor(case_when(
+      fatigue_tox <= 1 ~ 0,
+      fatigue_tox > 1 ~ 1
+    )),
+    dermatitis_response = factor(case_when(
+      dermatitis_tox <= 1 ~ 0,
+      dermatitis_tox > 1 ~ 1
+    ))
+  )
+```
+
+Find how many patients have value for each toxicity (high or low grades)
+```{r}
+data %>% 
+  filter((cr_response == 0 | cr_response == 1) & chemo_rt == 1) %>%
+  summarise(n())
+
+data %>% 
+  filter((hb_response == 0 | hb_response == 1) & chemo_rt == 1) %>%
+  summarise(n())
+
+data %>% 
+  filter((neut_response == 0 | neut_response == 1) & chemo_rt == 1) %>%
+  summarise(n())
+
+data %>% 
+  filter((wbc_response == 0 | wbc_response == 1) & chemo_rt == 1) %>%
+  summarise(n())
+
+data %>% 
+  filter((alb_response == 0 | alb_response == 1) & chemo_rt == 1) %>%
+  summarise(n())
+
+data %>% 
+  filter((GI_response == 0 | GI_response == 1) & chemo_rt == 1) %>%
+  summarise(n())
+
+data %>% 
+  filter((GU_response == 0 | GU_response == 1) & chemo_rt == 1) %>%
+  summarise(n())
+
+data %>% 
+  filter((vaginal_response == 0 | vaginal_response == 1) & chemo_rt == 1) %>% 
+  summarise(n())
+
+data %>% 
+  filter((dermatitis_response == 0 | dermatitis_response == 1) & chemo_rt == 1) %>% 
+  summarise(n())
+```
+
+Find how many patients have value for each toxicity (high grades only) by HIV status
+```{r}
+data %>% 
+  filter(hb_response == 1 & chemo_rt == 1) %>% group_by(hiv_status) %>% 
+  summarise(n()/222)
+
+data %>% 
+  filter(neut_response == 1 & chemo_rt == 1) %>% group_by(hiv_status) %>% 
+  summarise(n()/145)
+
+data %>% 
+  filter(wbc_response == 1 & chemo_rt == 1) %>% 
+  group_by(hiv_status) %>% 
+  summarise(n()/294)
+```
+
+Find how many patients have value for each toxicity (high grades only) by treatment type (CRT or RT alone)
+```{r}
+data %>% 
+  filter(cr_response == 1) %>% 
+  group_by(treatment_type) %>% 
+  summarise(n()/52)
+
+data %>% 
+  filter(hb_response == 1) %>% 
+  group_by(treatment_type) %>% 
+  summarise(n()/222)
+
+data %>% 
+  filter(neut_response == 1) %>% 
+  group_by(treatment_type) %>% 
+  summarise(n()/145)
+
+data %>% 
+  filter(wbc_response == 1) %>% 
+  group_by(treatment_type) %>% 
+  summarise(n()/294)
+
+data %>% 
+  filter(alb_response == 1) %>% 
+  group_by(treatment_type) %>% 
+  summarise(n()/87)
+```
+
+
+
+```{r}
+make.table(dat = data,
+           strat = "chemo_rt",
+           colnames = c("Characteristic", "RT", "CRT", "Overall", "P"),
+           cat.varlist = c("hb_response", "cr_response", "neut_response", "wbc_response", "alb_response", "GI_response", "GU_response", "vaginal_response", "fatigue_response", "dermatitis_response"),
+           cat.rmstat = list(c("row"), c("miss")),
+           cat.ptype = "chisq",
+           # cont.varlist = c("enroll_age", "distance", "cr_result", "hb_result", "neut_result", "wbc_result", "alb_result", "total_chemo_received", "eqd2", "treat_duration"),
+           # cont.ptype = "ttest",
+           # cont.rmstat = list(c("", "meansd", ""), c("q1q3")),
+           caption = "Table 5",
+           footer = "IB1 includes patients who have received chemoradiation therapy, excluding those who have received surgery.<br><i>Abbreviations:</i> ANC = absolute neutrophil count; ARV = antiretroviral; EBRT = external beam radiation therapy; EQD2 = radiobiological equivalent dose; KPS = Karofsky performance score; WBC = white blood cells.<br>Values are presented as number (percentage), unless otherwise noted.",
+           tspanner     = c("",""),
+            n.tspanner   = c(32.5, 32.5),
+            cgroup       = c("", "Results by CRT/RT", ""),
+            n.cgroup     = c(1, 3, 1),
+            
+           output = "html")
+```
+
+
+```{r}
+overall_univariate_logistic_regresion <- function(resp, predictors) {
+  formula <- as.formula(paste(resp, predictors, sep = " ~ "))
+  overall.logist <- glm(formula, data = data, family = binomial)
+  print(exp(cbind(coef(overall.logist))))
+  # summary(overall.logist)
+}
+
+subset_univariate_logistic_regresion <- function(resp, predictors, group) {
+  formula <- as.formula(paste(resp, predictors, sep = " ~ "))
+  res.logist <- glm(formula, data = data, family = binomial, subset =
+                          hiv_status == group)
+  print(summary(res.logist))
+  print(exp(cbind(coef(res.logist))))
+}
+
+overall_multivariate_logistic_regresion <- function(resp, predictors) {
+  formula <- as.formula(paste(resp, paste(predictors, collapse = " + "), sep = " ~ "))
+  overall.logist <- glm(formula, data = data, family = binomial)
+  # print(resp)
+  print(exp(cbind(coef(overall.logist))))
+  # summary(overall.logist)
+}
+
+subset_multivariate_logistic_regresion <- function(resp, predictors, group) {
+  formula <- as.formula(paste(resp, paste(predictors, collapse = " + "), sep = " ~ "))
+  res.logist <- glm(formula, data = data, family = binomial, subset =
+                          hiv_status == group)
+  print(summary(res.logist))
+  print(exp(cbind(coef(res.logist))))
+}
+
+```
+
+Univariate Logistic Regression
+```{r, R.options = list(width = 400)}
+responses <- c("hb_response", "cr_response", "neut_response", "wbc_response", "alb_response", "GI_response", "GU_response", "vaginal_response", "fatigue_response", "dermatitis_response")
+uni_predictors <- c("age_cat", "hiv_status", "marital", "init_performance_status", "combined_cancer_stage", "total_chemo_received_4", "eqd2")
+
+
+for (uni_predictor in uni_predictors) {
+  for (response in responses) {
+    print(c(response, uni_predictor))
+    print("Overall")
+    print(overall_univariate_logistic_regresion(response, uni_predictor))
+  }
+}
+
+```
+
+Multivariate Logistic Regression
+```{r}
+responses <- c("hb_response", "cr_response", "neut_response", "wbc_response", "alb_response",
+               "GI_response", "GU_response", "vaginal_response", "fatigue_response",
+               "dermatitis_response")
+multi_predictors_v1 <- c("age_cat", "combined_cancer_stage",
+                    "hiv_status", "total_chemo_received_4", "eqd2")
+multi_predictors_v2 <- c(multi_predictors_v1, c("init_performance_status"))
+multi_predictors_v3 <- c(multi_predictors_v1, c("marital"))
+multi_predictors_v4 <- c(c(multi_predictors_v1), c("init_performance_status", "marital"))
+
+
+
+
+for (response in responses) {
+  if (response %in% c("hb_response", "GU_response")) {
+    print(c(response, multi_predictors_v1))
+    print("Overall")
+    print(overall_multivariate_logistic_regresion(response, multi_predictors_v1))
+  }
+    
+  else if (response %in% c("alb_response", "vaginal_response", "fatigue_response", "dermatitis_response")) {
+    print(c(response, multi_predictors_v2))
+    print("Overall")
+    print(overall_multivariate_logistic_regresion(response, multi_predictors_v2))
+  }
+  
+  else if (response %in% c("neut_response", "GI_response")) {
+    print(c(response, multi_predictors_v3))
+    print("Overall")
+    print(overall_multivariate_logistic_regresion(response, multi_predictors_v3))
+  }
+  
+  else {
+    print(c(response, multi_predictors_v4))
+    print("Overall")
+    print(overall_multivariate_logistic_regresion(response, multi_predictors_v4))
+  }
+}
+
+```
+
+```{r}
+response <- "cr_response"
+multi_predictors_v1 <- c("age_cat", "combined_cancer_stage",
+                    "hiv_status", "total_chemo_received_4", "eqd2")
+print(c(response, multi_predictors_v1))
+print("Overall")
+print(overall_multivariate_logistic_regresion(response, multi_predictors_v1))
+
+predictor <- "total_chemo_received_4"
+print(overall_univariate_logistic_regresion(response, predictor))
+```
+
+
+```{r}
+# HIV pos run
+# Hb and azt
+response <- "hb_response"
+multi_predictors_v1 <- c("age_cat", "combined_cancer_stage", "total_chemo_received_4", "eqd2", "azt")
+print(c(response, multi_predictors_v1))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, multi_predictors_v1, "HIV-infected"))
+
+# Neut and azt
+response <- "neut_response"
+print(c(response, multi_predictors_v1))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, multi_predictors_v1, "HIV-infected"))
+
+# WBC and azt
+response <- "wbc_response"
+print(c(response, multi_predictors_v1))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, multi_predictors_v1, "HIV-infected"))
+
+# Hb and ARVs
+response <- "hb_response"
+multi_predictors_v2 <- c("age_cat", "combined_cancer_stage", "total_chemo_received_4", "eqd2", "pi", "nnrti", "nrti")
+print(c(response, multi_predictors_v2))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, multi_predictors_v2, "HIV-infected"))
+
+# Neut and ARVs
+response <- "neut_response"
+print(c(response, multi_predictors_v2))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, multi_predictors_v2, "HIV-infected"))
+
+# WBC and ARVs
+response <- "wbc_response"
+multi_predictors_v2 <- c("age_cat", "combined_cancer_stage", "total_chemo_received_4", "eqd2", "pi", "nnrti", "nrti")
+print(c(response, multi_predictors_v2))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, multi_predictors_v2, "HIV-infected"))
+
+# Cr and tdf
+response <- "cr_response"
+multi_predictors_v1 <- c("age_cat", "combined_cancer_stage", "total_chemo_received_4", "eqd2", "tdf")
+print(c(response, multi_predictors_v1))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, multi_predictors_v1, "HIV-infected"))
+print(c(response, multi_predictors_v2))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, multi_predictors_v2, "HIV-infected"))
+```
+
+```{r}
+# Added tests
+
+# Uni Cr and tdf
+response <- "cr_response"
+predictor <- "tdf"
+print(c(response, predictor))
+print("HIV-infected")
+print(subset_univariate_logistic_regresion(response, predictor, "HIV-infected"))
+
+# Uni Neut and azt
+response <- "neut_response"
+predictor <- "azt"
+print(c(response, predictor))
+print("HIV-infected")
+print(subset_univariate_logistic_regresion(response, predictor, "HIV-infected"))
+
+# Uni WBC and azt
+response <- "wbc_response"
+predictor <- "azt"
+print(c(response, predictor))
+print("HIV-infected")
+print(subset_univariate_logistic_regresion(response, predictor, "HIV-infected"))
+
+# Uni hb and arvs
+response <- "hb_response"
+predictors <- c("nnrti", "nrti", "pi")
+print(c(response, predictors))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+
+# Uni Cr and arvs
+response <- "cr_response"
+predictors <- c("nnrti", "nrti", "pi")
+print(c(response, predictors))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+
+# Uni neut and arvs
+response <- "neut_response"
+predictors <- c("nnrti", "nrti", "pi")
+print(c(response, predictors))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+
+# Uni wbc and arvs
+response <- "wbc_response"
+predictors <- c("nnrti", "nrti", "pi")
+print(c(response, predictors))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+
+# Uni alb and arvs
+response <- "alb_response"
+predictors <- c("nnrti", "nrti", "pi")
+print(c(response, predictors))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+
+# Uni GI and arvs
+response <- "GI_response"
+predictors <- c("nnrti", "nrti", "pi")
+print(c(response, predictors))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+
+# Uni GU and arvs
+response <- "GU_response"
+predictors <- c("nnrti", "nrti", "pi")
+print(c(response, predictors))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+
+# Uni vaginal and arvs
+response <- "vaginal_response"
+predictors <- c("nnrti", "nrti", "pi")
+print(c(response, predictors))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+
+# Uni fatigue and arvs
+response <- "fatigue_response"
+predictors <- c("nnrti", "nrti", "pi")
+print(c(response, predictors))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+
+# Uni dermatitis and arvs
+response <- "dermatitis_response"
+predictors <- c("nnrti", "nrti", "pi")
+print(c(response, predictors))
+print("HIV-infected")
+print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+
+
+```
+

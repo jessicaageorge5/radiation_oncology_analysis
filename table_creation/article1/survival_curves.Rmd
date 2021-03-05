@@ -1,0 +1,234 @@
+---
+title: "Survival Curves"
+author: "Jessica George and Shawna Tuli"
+date: "12/27/2020"
+output: html_document
+---
+
+Libraries
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(survival)
+library(survminer)
+```
+
+Data Creation
+```{r message=FALSE, warning=FALSE}
+data <- read_csv("../data/data.csv") %>% 
+  mutate(
+    hiv_status = factor(hiv_status, levels = c(0, 1), labels = c("HIV-uninfected", "HIV-infected")),
+    combined_cancer_stage = factor(combined_cancer_stage, levels = c(0, 1, 2, 3, 4), labels = c("I", "I", "II (IIA / IIB)", "III (IIIA / IIIB / IIIC)", "IV (IVA / IVB)")),
+time_alive_path = time_alive_path/365)
+```
+
+KMs on All Patients
+1) Survival status by stage
+```{r, fig.width = 8}
+stage_survival <- survfit(Surv(time_alive_path, vital_status) ~ combined_cancer_stage, data)
+
+stage_plot <- ggsurvplot(fit = stage_survival,
+  data,
+  xlab = "Years since pathology report",
+  xlim = c(0, 6),
+  ylab = "Proportion surviving",
+  title = "Kaplan-Meier Survival Estimates by Cancer Stage",
+  break.time.by = 1,
+  palette = c("#333333", "#E69F00", "#009E73", "#56B4E9", "#0072B2"),
+  conf.int = FALSE,
+  censor = TRUE,
+  legend.title="",
+  legend.labs = c("I (IA, IA1, IA2)", "I (IB1*, IB2)", "II (IIA, IIB)", "III (IIIA, IIIB, IIIC)", "IV (IVA, IVB)"),
+  risk.table = TRUE,
+  risk.table.height = 0.2,
+  tables.theme = theme_cleantable())
+stage_plot$plot <- stage_plot$plot +
+  theme(plot.title = element_text(hjust = 0.4), panel.grid.major.y = element_line(color = "#EAF2F3"), plot.background = element_rect(fill = "#EAF2F3"), axis.title.y = element_text(vjust = 1))
+
+stage_plot$plot
+```
+```{r, fig.height = 2, fig.width = 8}
+stage_plot$table <- stage_plot$table + theme(plot.title = element_text(hjust = -0.25, size = 14), plot.background = element_rect(fill = "#EAF2F3"), panel.background = element_rect(fill = "#EAF2F3"))
+
+stage_plot$table
+```
+
+
+2) Survival status by HIV status and stage
+```{r, fig.width = 12}
+hiv_stage_survival <- survfit(Surv(time_alive_path, vital_status) ~ hiv_status + combined_cancer_stage, data)
+
+hiv_stage_plot <- ggsurvplot(fit = hiv_stage_survival,
+  data,
+  xlab = "Years since pathology report",
+  xlim = c(0, 6),
+  ylab = "Proportion surviving",
+  title = "Kaplan-Meier Survival Estimates by HIV Status and Cancer Stage",
+  break.time.by = 1,
+  color = "hiv_status",
+  palette = c("#56B4E9", "#0072B2"),
+  conf.int = FALSE,
+  censor = TRUE,
+  legend.title="",
+  risk.table = TRUE,
+  risk.table.height = 0.2,
+  tables.theme = theme_cleantable())
+hiv_stage_plot$plot <- hiv_stage_plot$plot +
+  theme(plot.title = element_text(hjust = 0.4), panel.grid.major.y = element_line(color = "#EAF2F3"), plot.background = element_rect(fill = "#EAF2F3"), axis.title.y = element_text(vjust = 1))
+
+hiv_stage_plot$plot +
+  facet_wrap(~ combined_cancer_stage)
+```
+```{r, fig.height = 4, fig.width = 12}
+hiv_stage_plot$table <- hiv_stage_plot$table + theme(plot.title = element_text(hjust = -0.08, size = 14), plot.background = element_rect(fill = "#EAF2F3"), panel.background = element_rect(fill = "#EAF2F3"))
+
+tablelabs = rev(c("HIV-uninfected", "", "", "", "", "HIV-infected", "", "", "", ""))
+hiv_stage_plot$table +
+  facet_wrap(~ combined_cancer_stage) +
+  scale_y_discrete(labels = tablelabs)
+```
+
+Derived Survival Info
+```{r}
+## Median time
+# Overall
+data %>% summarise(median(time_alive_path, na.rm = T))
+# By stage
+data %>% group_by(combined_cancer_stage) %>% summarise(median(time_alive_path, na.rm = T))
+# By HIV status
+data %>% group_by(hiv_status) %>% summarise(median(time_alive_path, na.rm = T))
+# By HIV status and stage
+data %>% group_by(hiv_status, combined_cancer_stage) %>% summarise(median(time_alive_path, na.rm = T))
+
+
+## 2 year survival
+# Overall
+summary(survfit(Surv(time_alive_path, vital_status) ~ 1, data), times = c(2), extend = T)
+# By stage
+summary(survfit(Surv(time_alive_path, vital_status) ~ combined_cancer_stage, data) , times = c(2), extend = T)
+# By HIV status
+summary(survfit(Surv(time_alive_path, vital_status) ~ hiv_status, data) , times = c(2), extend = T)
+# By HIV status and stage
+summary(survfit(Surv(time_alive_path, vital_status) ~ hiv_status + combined_cancer_stage, data) , times = c(2), extend = T)
+# HIV-infected
+data %>% filter(hiv_status == "HIV-infected") %>%
+  survfit(Surv(time_alive_path, vital_status) ~ 1,.) %>% 
+  summary(times = c(2), extend = T)
+# HIV-infected by stage
+data %>% filter(hiv_status == "HIV-infected") %>%
+  survfit(Surv(time_alive_path, vital_status) ~ combined_cancer_stage,.) %>% 
+  summary(times = c(2), extend = T)
+# HIV-uninfected by stage
+data %>% filter(hiv_status == "HIV-uninfected") %>%
+  survfit(Surv(time_alive_path, vital_status) ~ combined_cancer_stage,.) %>% 
+  summary(times = c(2), extend = T)
+  
+
+## 5 year survival
+# Overall
+summary(survfit(Surv(time_alive_path, vital_status) ~ 1, data), times = c(5), extend = T)
+# By stage
+summary(survfit(Surv(time_alive_path, vital_status) ~ combined_cancer_stage, data) , times = c(5), extend = T)
+# By HIV status
+summary(survfit(Surv(time_alive_path, vital_status) ~ hiv_status, data) , times = c(5), extend = T)
+# By HIV status and stage
+summary(survfit(Surv(time_alive_path, vital_status) ~ hiv_status + combined_cancer_stage, data) , times = c(5), extend = T)
+# HIV-infected
+data %>% filter(hiv_status == "HIV-infected") %>%
+  survfit(Surv(time_alive_path, vital_status) ~ 1,.) %>% 
+  summary(times = c(5), extend = T)
+# HIV-infected by stage
+data %>% filter(hiv_status == "HIV-infected") %>%
+  survfit(Surv(time_alive_path, vital_status) ~ combined_cancer_stage,.) %>% 
+  summary(times = c(5), extend = T)
+# HIV-uninfected by stage
+data %>% filter(hiv_status == "HIV-uninfected") %>%
+  survfit(Surv(time_alive_path, vital_status) ~ 1,.) %>% 
+  summary(times = c(5), extend = T)
+data %>% filter(hiv_status == "HIV-uninfected") %>%
+  survfit(Surv(time_alive_path, vital_status) ~ combined_cancer_stage,.) %>% 
+  summary(times = c(5), extend = T)
+
+## Alive v. dead
+# Overall
+summary(survfit(Surv(time_alive_path, vital_status) ~ 1, data), times = c(1,2,3,4,5,6), extend = T)$n.event
+# By stage
+summary(survfit(Surv(time_alive_path, vital_status) ~ combined_cancer_stage, data), times = c(1,2,3,4,5,6), extend = T)$n.event
+# By HIV status
+summary(survfit(Surv(time_alive_path, vital_status) ~ hiv_status, data), times = c(1,2,3,4,5,6), extend = T)$n.event
+# By HIV status and stage
+summary(survfit(Surv(time_alive_path, vital_status) ~ hiv_status + combined_cancer_stage, data), times = c(1,2,3,4,5,6), extend = T)$n.event
+```
+
+
+KMs on Non-Surgery Patients
+1) Survival by HIV status -- Non-surgery
+```{r}
+# hiv_survival <- survfit(Surv(time_alive, vital_status) ~ hiv_status, non_surgery_patients)
+# 
+# hiv_plot <- ggsurvplot(fit = hiv_survival,
+#   non_surgery_patients,
+#   xlab = "Years since first day of chemoradiation", 
+#   ylab = "Proportion surviving",
+#   title = "Kaplan-Meier Survival Estimates by HIV Status",
+#   break.time.by = 1,
+#   palette = c("#0000FF", "#FF0000"),
+#   conf.int = FALSE,
+#   censor = TRUE,
+#   legend.title="",
+#   legend.labs = c("HIV-uninfected", "HIV-infected"),
+#   risk.table = TRUE,
+#   risk.table.height = 0.2,
+#   tables.theme = theme_cleantable())
+# hiv_plot$plot <- hiv_plot$plot +
+#   theme(plot.title = element_text(hjust = 0.4), panel.grid.major.y = element_line(color = "#EAF2F3"), plot.background = element_rect(fill = "#EAF2F3"), axis.title.y = element_text(vjust = -15))
+# hiv_plot$table <- hiv_plot$table + theme(plot.title = element_text(hjust = -0.33, size = 14), plot.background = element_rect(fill = "#EAF2F3"), panel.background = element_rect(fill = "#EAF2F3"))
+# hiv_plot
+```
+
+2) Survival by chemoradiation therapy -- Non-surgery
+```{r}
+# chemo_rad_survival <- survfit(Surv(time_alive, vital_status) ~ chemo_rad, non_surgery_patients)
+# 
+# chemo_rad_plot <- ggsurvplot(fit = chemo_rad_survival,
+#   non_surgery_patients,
+#   xlab = "Years since first day of chemoradiation", 
+#   ylab = "Proportion surviving",
+#   title = "Kaplan-Meier Survival Estimates by CRT",
+#   break.time.by = 1,
+#   palette = c("#0000FF", "#FF0000"),
+#   conf.int = FALSE,
+#   censor = TRUE,
+#   legend.title = "",
+#   legend.labs = c("CRT", "RT"),
+#   risk.table = TRUE,
+#   risk.table.height = 0.2,
+#   tables.theme = theme_cleantable())
+# chemo_rad_plot$plot <- chemo_rad_plot$plot +
+#   theme(plot.title = element_text(hjust = 0.5), panel.grid.major.y = element_line(color = "#EAF2F3"), plot.background = element_rect(fill = "#EAF2F3"), axis.title.y = element_text(vjust = 1))
+# chemo_rad_plot$table <- chemo_rad_plot$table + theme(plot.title = element_text(hjust = -0.12, size = 14), plot.background = element_rect(fill = "#EAF2F3"), panel.background = element_rect(fill = "#EAF2F3"))
+# chemo_rad_plot
+```
+
+3) Survival by HIV status and chemoradiation therapy
+```{r}
+# hiv_chemo_rad_survival <- survfit(Surv(time_alive, vital_status) ~ hiv_status + chemo_rad, non_surgery_patients)
+# 
+# hiv_chemo_rad_plot <- ggsurvplot(fit = hiv_chemo_rad_survival,
+#   non_surgery_patients,
+#   xlab = "Years since first day of chemoradiation", 
+#   ylab = "Proportion surviving",
+#   title = "Kaplan-Meier Survival Estimates by HIV Status & CRT",
+#   break.time.by = 1,
+#   palette = c("darkred", "red", "blue", "darkblue"),
+#   conf.int = FALSE,
+#   censor = TRUE,
+#   legend.title = "",
+#   legend.labs = c("HIV+&CRT", "HIV+&RT", "HIV-&CRT", "HIV-&RT"),
+#   risk.table = TRUE,
+#   risk.table.height = 0.3,
+#   tables.theme = theme_cleantable())
+# hiv_chemo_rad_plot$plot <- hiv_chemo_rad_plot$plot +
+#   theme(plot.title = element_text(hjust = 0.7), panel.grid.major.y = element_line(color = "#EAF2F3"), plot.background = element_rect(fill = "#EAF2F3"), axis.title.y = element_text(vjust = -10))
+# hiv_chemo_rad_plot$table <- hiv_chemo_rad_plot$table + theme(plot.title = element_text(hjust = -0.24, size = 14), plot.background = element_rect(fill = "#EAF2F3"), panel.background = element_rect(fill = "#EAF2F3"))
+# hiv_chemo_rad_plot
+```
