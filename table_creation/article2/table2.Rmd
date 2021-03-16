@@ -1,7 +1,7 @@
 ---
-title: "Table 4"
-author: "Jessica George and Shawna Tuli"
-date: "2/25/2021"
+title: "Table 2 & Logistic Regression"
+author: "Shawna Tuli and Jessica George"
+date: "3/15/2021"
 output: html_document
 ---
 
@@ -16,7 +16,7 @@ library(Table1)
 Article 2
 Data Creation
 ```{r message=FALSE, warning=FALSE}
-data <- read_csv("../data/data.csv") %>% 
+data <- read_csv("../../data/data.csv") %>% 
   filter(surgery == 0) %>% 
   mutate(
     hiv_status = factor(hiv_status, levels = c(1, 0), labels = c("HIV-infected", "HIV-uninfected")),
@@ -217,8 +217,10 @@ make.table(dat = data,
 overall_univariate_logistic_regresion <- function(resp, predictors) {
   formula <- as.formula(paste(resp, predictors, sep = " ~ "))
   overall.logist <- glm(formula, data = data, family = binomial)
+  cat('# ', 1+1, formula)
+  print(summary(overall.logist))
   print(exp(cbind(coef(overall.logist))))
-  # summary(overall.logist)
+  print("")
 }
 
 subset_univariate_logistic_regresion <- function(resp, predictors, group) {
@@ -227,14 +229,15 @@ subset_univariate_logistic_regresion <- function(resp, predictors, group) {
                           hiv_status == group)
   print(summary(res.logist))
   print(exp(cbind(coef(res.logist))))
+  print("")
 }
 
 overall_multivariate_logistic_regresion <- function(resp, predictors) {
   formula <- as.formula(paste(resp, paste(predictors, collapse = " + "), sep = " ~ "))
   overall.logist <- glm(formula, data = data, family = binomial)
-  # print(resp)
+  print(summary(overall.logist))
   print(exp(cbind(coef(overall.logist))))
-  # summary(overall.logist)
+  print("")
 }
 
 subset_multivariate_logistic_regresion <- function(resp, predictors, group) {
@@ -243,227 +246,226 @@ subset_multivariate_logistic_regresion <- function(resp, predictors, group) {
                           hiv_status == group)
   print(summary(res.logist))
   print(exp(cbind(coef(res.logist))))
+  print("")
 }
 
 ```
 
-Univariate Logistic Regression
+Univariate Logistic Regression on HIV Pos
 ```{r, R.options = list(width = 400)}
 responses <- c("hb_response", "cr_response", "neut_response", "wbc_response", "alb_response", "GI_response", "GU_response", "vaginal_response", "fatigue_response", "dermatitis_response")
-uni_predictors <- c("age_cat", "hiv_status", "marital", "init_performance_status", "combined_cancer_stage", "total_chemo_received_4", "eqd2")
+uni_predictors <- c("age_cat", "combined_cancer_stage", "eqd2", "total_chemo_received_4", "eqd2", "nrti", "pi", "cd4_final", "cd4_pos_cat2", "vl_final")
 
 
 for (uni_predictor in uni_predictors) {
   for (response in responses) {
     print(c(response, uni_predictor))
-    print("Overall")
-    print(overall_univariate_logistic_regresion(response, uni_predictor))
+    print("HIV Pos Overall")
+    subset_univariate_logistic_regresion(response, uni_predictor, "HIV-infected")
   }
 }
 
-```
-
-Multivariate Logistic Regression
-```{r}
-responses <- c("hb_response", "cr_response", "neut_response", "wbc_response", "alb_response",
-               "GI_response", "GU_response", "vaginal_response", "fatigue_response",
-               "dermatitis_response")
-multi_predictors_v1 <- c("age_cat", "combined_cancer_stage",
-                    "hiv_status", "total_chemo_received_4", "eqd2")
-multi_predictors_v2 <- c(multi_predictors_v1, c("init_performance_status"))
-multi_predictors_v3 <- c(multi_predictors_v1, c("marital"))
-multi_predictors_v4 <- c(c(multi_predictors_v1), c("init_performance_status", "marital"))
-
-
-
-
-for (response in responses) {
-  if (response %in% c("hb_response", "GU_response")) {
-    print(c(response, multi_predictors_v1))
-    print("Overall")
-    print(overall_multivariate_logistic_regresion(response, multi_predictors_v1))
-  }
-    
-  else if (response %in% c("alb_response", "vaginal_response", "fatigue_response", "dermatitis_response")) {
-    print(c(response, multi_predictors_v2))
-    print("Overall")
-    print(overall_multivariate_logistic_regresion(response, multi_predictors_v2))
-  }
-  
-  else if (response %in% c("neut_response", "GI_response")) {
-    print(c(response, multi_predictors_v3))
-    print("Overall")
-    print(overall_multivariate_logistic_regresion(response, multi_predictors_v3))
-  }
-  
-  else {
-    print(c(response, multi_predictors_v4))
-    print("Overall")
-    print(overall_multivariate_logistic_regresion(response, multi_predictors_v4))
-  }
-}
-
-```
-
-```{r}
-response <- "cr_response"
-multi_predictors_v1 <- c("age_cat", "combined_cancer_stage",
-                    "hiv_status", "total_chemo_received_4", "eqd2")
-print(c(response, multi_predictors_v1))
-print("Overall")
-print(overall_multivariate_logistic_regresion(response, multi_predictors_v1))
-
-predictor <- "total_chemo_received_4"
-print(overall_univariate_logistic_regresion(response, predictor))
-```
-
-
-```{r}
-# HIV pos run
-# Hb and azt
+# Hb ~ azt
 response <- "hb_response"
-multi_predictors_v1 <- c("age_cat", "combined_cancer_stage", "total_chemo_received_4", "eqd2", "azt")
-print(c(response, multi_predictors_v1))
+predictor <- "azt"
+print(c(response, predictor))
 print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, multi_predictors_v1, "HIV-infected"))
+subset_univariate_logistic_regresion(response, predictor, "HIV-infected")
 
-# Neut and azt
-response <- "neut_response"
-print(c(response, multi_predictors_v1))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, multi_predictors_v1, "HIV-infected"))
-
-# WBC and azt
-response <- "wbc_response"
-print(c(response, multi_predictors_v1))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, multi_predictors_v1, "HIV-infected"))
-
-# Hb and ARVs
-response <- "hb_response"
-multi_predictors_v2 <- c("age_cat", "combined_cancer_stage", "total_chemo_received_4", "eqd2", "pi", "nnrti", "nrti")
-print(c(response, multi_predictors_v2))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, multi_predictors_v2, "HIV-infected"))
-
-# Neut and ARVs
-response <- "neut_response"
-print(c(response, multi_predictors_v2))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, multi_predictors_v2, "HIV-infected"))
-
-# WBC and ARVs
-response <- "wbc_response"
-multi_predictors_v2 <- c("age_cat", "combined_cancer_stage", "total_chemo_received_4", "eqd2", "pi", "nnrti", "nrti")
-print(c(response, multi_predictors_v2))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, multi_predictors_v2, "HIV-infected"))
-
-# Cr and tdf
-response <- "cr_response"
-multi_predictors_v1 <- c("age_cat", "combined_cancer_stage", "total_chemo_received_4", "eqd2", "tdf")
-print(c(response, multi_predictors_v1))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, multi_predictors_v1, "HIV-infected"))
-print(c(response, multi_predictors_v2))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, multi_predictors_v2, "HIV-infected"))
-```
-
-```{r}
-# Added tests
-
-# Uni Cr and tdf
+# Cr ~ tdf
 response <- "cr_response"
 predictor <- "tdf"
 print(c(response, predictor))
 print("HIV-infected")
-print(subset_univariate_logistic_regresion(response, predictor, "HIV-infected"))
+subset_univariate_logistic_regresion(response, predictor, "HIV-infected")
 
-# Uni Neut and azt
-response <- "neut_response"
-predictor <- "azt"
-print(c(response, predictor))
-print("HIV-infected")
-print(subset_univariate_logistic_regresion(response, predictor, "HIV-infected"))
+# Cr ~ chemo
+# print(overall_univariate_logistic_regresion("cr_response", "total_chemo_received_4"))
 
-# Uni WBC and azt
-response <- "wbc_response"
-predictor <- "azt"
-print(c(response, predictor))
-print("HIV-infected")
-print(subset_univariate_logistic_regresion(response, predictor, "HIV-infected"))
+# Neut ~ azt
+# response <- "neut_response"
+# predictor <- "azt"
+# print(c(response, predictor))
+# print("HIV-infected")
+# print(subset_univariate_logistic_regresion(response, predictor, "HIV-infected"))
 
-# Uni hb and arvs
-response <- "hb_response"
-predictors <- c("nnrti", "nrti", "pi")
-print(c(response, predictors))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+# WBC ~ azt
+# response <- "wbc_response"
+# predictor <- "azt"
+# print(c(response, predictor))
+# print("HIV-infected")
+# print(subset_univariate_logistic_regresion(response, predictor, "HIV-infected"))
+```
 
-# Uni Cr and arvs
-response <- "cr_response"
-predictors <- c("nnrti", "nrti", "pi")
-print(c(response, predictors))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
-
-# Uni neut and arvs
-response <- "neut_response"
-predictors <- c("nnrti", "nrti", "pi")
-print(c(response, predictors))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
-
-# Uni wbc and arvs
-response <- "wbc_response"
-predictors <- c("nnrti", "nrti", "pi")
-print(c(response, predictors))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
-
-# Uni alb and arvs
-response <- "alb_response"
-predictors <- c("nnrti", "nrti", "pi")
-print(c(response, predictors))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
-
-# Uni GI and arvs
-response <- "GI_response"
-predictors <- c("nnrti", "nrti", "pi")
-print(c(response, predictors))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
-
-# Uni GU and arvs
-response <- "GU_response"
-predictors <- c("nnrti", "nrti", "pi")
-print(c(response, predictors))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
-
-# Uni vaginal and arvs
-response <- "vaginal_response"
-predictors <- c("nnrti", "nrti", "pi")
-print(c(response, predictors))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
-
-# Uni fatigue and arvs
-response <- "fatigue_response"
-predictors <- c("nnrti", "nrti", "pi")
-print(c(response, predictors))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
-
-# Uni dermatitis and arvs
-response <- "dermatitis_response"
-predictors <- c("nnrti", "nrti", "pi")
-print(c(response, predictors))
-print("HIV-infected")
-print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
-
+Multivariate Logistic Regression for all patients
+(Commented out -- Will modify after meeting with Shin and Zetola)
+```{r}
+# responses <- c("hb_response", "cr_response", "neut_response", "wbc_response", "alb_response",
+#                "GI_response", "GU_response", "vaginal_response", "fatigue_response",
+#                "dermatitis_response")
+# multi_predictors_v1 <- c("age_cat", "combined_cancer_stage",
+#                     "hiv_status", "total_chemo_received_4", "eqd2")
+# multi_predictors_v2 <- c(multi_predictors_v1, c("init_performance_status"))
+# multi_predictors_v3 <- c(multi_predictors_v1, c("marital"))
+# multi_predictors_v4 <- c(c(multi_predictors_v1), c("init_performance_status", "marital"))
+# 
+# for (response in responses) {
+#   if (response %in% c("hb_response", "GU_response")) {
+#     print(c(response, multi_predictors_v1))
+#     print("Overall")
+#     print(overall_multivariate_logistic_regresion(response, multi_predictors_v1))
+#   }
+#     
+#   else if (response %in% c("alb_response", "vaginal_response", "fatigue_response", "dermatitis_response")) {
+#     print(c(response, multi_predictors_v2))
+#     print("Overall")
+#     print(overall_multivariate_logistic_regresion(response, multi_predictors_v2))
+#   }
+#   
+#   else if (response %in% c("neut_response", "GI_response")) {
+#     print(c(response, multi_predictors_v3))
+#     print("Overall")
+#     print(overall_multivariate_logistic_regresion(response, multi_predictors_v3))
+#   }
+#   
+#   else {
+#     print(c(response, multi_predictors_v4))
+#     print("Overall")
+#     print(overall_multivariate_logistic_regresion(response, multi_predictors_v4))
+#   }
+# }
+# 
+# response <- "cr_response"
+# multi_predictors_v1 <- c("age_cat", "combined_cancer_stage",
+#                     "hiv_status", "total_chemo_received_4", "eqd2")
+# print(c("cr_response", multi_predictors_v1))
+# print("Overall")
+# print(overall_multivariate_logistic_regresion(response, multi_predictors_v1))
 
 ```
+
+Multivariate Logistic Regression on HIV Pos
+(Commented out-- Will modify after meeting with Shin and Zetola)
+```{r}
+# # HIV pos run
+# # Hb and azt
+# response <- "hb_response"
+# multi_predictors_v1 <- c("age_cat", "combined_cancer_stage", "total_chemo_received_4", "eqd2", "azt")
+# print(c(response, multi_predictors_v1))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, multi_predictors_v1, "HIV-infected"))
+# 
+# # Neut and azt
+# response <- "neut_response"
+# print(c(response, multi_predictors_v1))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, multi_predictors_v1, "HIV-infected"))
+# 
+# # WBC and azt
+# response <- "wbc_response"
+# print(c(response, multi_predictors_v1))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, multi_predictors_v1, "HIV-infected"))
+# 
+# # Hb and ARVs
+# response <- "hb_response"
+# multi_predictors_v2 <- c("age_cat", "combined_cancer_stage", "total_chemo_received_4", "eqd2", "pi", "nnrti", "nrti")
+# print(c(response, multi_predictors_v2))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, multi_predictors_v2, "HIV-infected"))
+# 
+# # Neut and ARVs
+# response <- "neut_response"
+# print(c(response, multi_predictors_v2))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, multi_predictors_v2, "HIV-infected"))
+# 
+# # WBC and ARVs
+# response <- "wbc_response"
+# multi_predictors_v2 <- c("age_cat", "combined_cancer_stage", "total_chemo_received_4", "eqd2", "pi", "nnrti", "nrti")
+# print(c(response, multi_predictors_v2))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, multi_predictors_v2, "HIV-infected"))
+# 
+# # Cr and tdf
+# response <- "cr_response"
+# multi_predictors_v1 <- c("age_cat", "combined_cancer_stage", "total_chemo_received_4", "eqd2", "tdf")
+# print(c(response, multi_predictors_v1))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, multi_predictors_v1, "HIV-infected"))
+# print(c(response, multi_predictors_v2))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, multi_predictors_v2, "HIV-infected"))
+# Uni hb and arvs
+# response <- "hb_response"
+# predictors <- c("nnrti", "nrti", "pi")
+# print(c(response, predictors))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+# 
+# # Uni Cr and arvs
+# response <- "cr_response"
+# predictors <- c("nnrti", "nrti", "pi")
+# print(c(response, predictors))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+# 
+# # Uni neut and arvs
+# response <- "neut_response"
+# predictors <- c("nnrti", "nrti", "pi")
+# print(c(response, predictors))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+# 
+# # Uni wbc and arvs
+# response <- "wbc_response"
+# predictors <- c("nnrti", "nrti", "pi")
+# print(c(response, predictors))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+# 
+# # Uni alb and arvs
+# response <- "alb_response"
+# predictors <- c("nnrti", "nrti", "pi")
+# print(c(response, predictors))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+# 
+# # Uni GI and arvs
+# response <- "GI_response"
+# predictors <- c("nnrti", "nrti", "pi")
+# print(c(response, predictors))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+# 
+# # Uni GU and arvs
+# response <- "GU_response"
+# predictors <- c("nnrti", "nrti", "pi")
+# print(c(response, predictors))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+# 
+# # Uni vaginal and arvs
+# response <- "vaginal_response"
+# predictors <- c("nnrti", "nrti", "pi")
+# print(c(response, predictors))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+# 
+# # Uni fatigue and arvs
+# response <- "fatigue_response"
+# predictors <- c("nnrti", "nrti", "pi")
+# print(c(response, predictors))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+# 
+# # Uni dermatitis and arvs
+# response <- "dermatitis_response"
+# predictors <- c("nnrti", "nrti", "pi")
+# print(c(response, predictors))
+# print("HIV-infected")
+# print(subset_multivariate_logistic_regresion(response, predictors, "HIV-infected"))
+```
+
+
 
