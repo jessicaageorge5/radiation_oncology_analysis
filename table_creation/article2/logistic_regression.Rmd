@@ -1,0 +1,129 @@
+---
+title: "Logistic Regression"
+author: "Shawna Tuli and Jessica George"
+date: "3/15/2021"
+output: html_document
+---
+
+# Libraries
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(survival)
+library(Table1)
+
+source("../format_data.R")
+```
+
+# Data
+```{r message=FALSE, warning=FALSE}
+data <- read_csv("../../data/data.csv") %>% 
+  format_data(article_number = 2)
+```
+
+Create response variables
+```{r}
+data <- data %>%
+  mutate(
+    hb_response = factor(case_when(
+      hb_tox_grade <= 1 ~ 0,
+      hb_tox_grade > 1 ~ 1
+    )),
+    cr_response = factor(case_when(
+      cr_tox_grade <= 1 ~ 0,
+      cr_tox_grade > 1 ~ 1
+    )),
+    neut_response = factor(case_when(
+      neut_tox_grade <= 1 ~ 0,
+      neut_tox_grade > 1 ~ 1
+    )),
+    wbc_response = factor(case_when(
+      wbc_tox_grade <= 1 ~ 0,
+      wbc_tox_grade > 1 ~ 1
+    )),
+    alb_response = factor(case_when(
+      alb_tox_grade <= 1 ~ 0,
+      alb_tox_grade > 1 ~ 1
+    )),
+    GI_response = factor(case_when(
+      nausea_tox <= 1 | vomiting_tox <= 1 | diarrhea_tox <= 1 ~ 0,
+      nausea_tox > 1 | vomiting_tox > 1 | diarrhea_tox > 1 ~ 1
+    )),
+    GU_response = factor(case_when(
+      urine_freq_tox <= 1 | urine_incontinence_tox <= 1 | urine_urge_tox <= 1 ~ 0,
+      urine_freq_tox > 1 | urine_incontinence_tox > 1 | urine_urge_tox > 1 ~ 1
+    )),
+    vaginal_response = factor(case_when(
+      vaginal_hemorrhage_tox <= 1 | vaginal_discharge_tox <= 1 | pelvic_pain_tox <= 1 ~ 0,
+      vaginal_hemorrhage_tox > 1 | vaginal_discharge_tox > 1 | pelvic_pain_tox > 1 ~ 1
+    )),
+    fatigue_response = factor(case_when(
+      fatigue_tox <= 1 ~ 0,
+      fatigue_tox > 1 ~ 1
+    )),
+    dermatitis_response = factor(case_when(
+      dermatitis_tox <= 1 ~ 0,
+      dermatitis_tox > 1 ~ 1
+    ))
+  )
+```
+
+# Functions
+```{r}
+overall_univariate_logistic_regresion <- function(resp, predictors) {
+  formula <- as.formula(paste(resp, predictors, sep = " ~ "))
+  overall.logist <- glm(formula, data = data, family = binomial)
+  return(overall.logist)
+}
+
+subset_univariate_logistic_regresion <- function(resp, predictors, group) {
+  formula <- as.formula(paste(resp, predictors, sep = " ~ "))
+  res.logist <- glm(formula, data = data, family = binomial, subset =
+                          hiv_status == group)
+  return(res.logist)
+}
+
+overall_multivariate_logistic_regresion <- function(resp, predictors) {
+  formula <- as.formula(paste(resp, paste(predictors, collapse = " + "), sep = " ~ "))
+  overall.logist <- glm(formula, data = data, family = binomial)
+  return(overall.logist)
+}
+
+subset_multivariate_logistic_regresion <- function(resp, predictors, group) {
+  formula <- as.formula(paste(resp, paste(predictors, collapse = " + "), sep = " ~ "))
+  res.logist <- glm(formula, data = data, family = binomial, subset =
+                          hiv_status == group)
+  return(res.logist)
+}
+
+```
+
+# Univariate Logistic Regression on HIV Pos
+```{r results="asis"}
+responses <- c("hb_response", "cr_response", "neut_response", "wbc_response", "alb_response", "GI_response", "GU_response", "vaginal_response", "fatigue_response", "dermatitis_response")
+uni_predictors <- c("age_cat", "combined_cancer_stage", "eqd2", "total_chemo_received_4", "eqd2", "nrti", "pi", "cd4_pos_cat2", "cd4_final", "vl_final", "azt", "tdf")
+
+for (uni_predictor in uni_predictors) {
+  for (response in responses) {
+    cat("\n#", response, "~", uni_predictor, "  \n")
+    model <- subset_univariate_logistic_regresion(response, uni_predictor, "HIV-infected")
+    cat("```")
+    print(summary(model))
+    # Skip outputting OR on sparse data
+    if (response == "GU_response" & uni_predictor %in% c("cd4_final", "vl_final", "cd4_pos_cat2", "azt", "tdf")) {
+      cat("```")
+      next
+    }
+    print(exp(cbind(OR = coef(model), suppressMessages(confint(model)))))
+    cat("```")
+  }
+}
+ 
+for (response in responses) {
+  cat("\n#", response, "~ nnrti + pi  \n")
+  model <- subset_multivariate_logistic_regresion(response, c("nnrti", "pi"), "HIV-infected")
+  cat("```")
+  print(summary(model))
+  print(exp(cbind(OR = coef(model), suppressMessages(confint(model)))))
+  cat("```")
+}
+```

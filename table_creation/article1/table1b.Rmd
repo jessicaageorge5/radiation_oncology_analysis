@@ -1,0 +1,41 @@
+---
+title: "Table 1b"
+author: "Jessica George and Shawna Tuli"
+date: "3/15/2021"
+output: html_document
+---
+
+# Libraries
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(Table1)
+library(lubridate)
+
+source("../format_data.R")
+```
+
+# Data
+```{r message=FALSE, warning=FALSE}
+all_patients <- read_csv("../../data/data.csv") %>% 
+  format_data(article_number = 1)
+```
+
+# Create Table 1b (Characteristics for surgery patients)
+```{r}
+surgery <- all_patients %>% 
+  filter(combined_cancer_stage_exact < 4 | (combined_cancer_stage_exact >= 4 & surgery == "Yes"))
+
+make.table(dat = surgery,
+           strat = "hiv_status",
+           colnames = c("Characteristic", "HIV-infected", "HIV-uninfected", "Overall", "P"),
+           cat.varlist = c("surgery"),
+           cat.rmstat = list(c("row"), c("miss")),
+           cat.ptype = "chisq",
+           caption = "Table 1b",
+           tspanner     = c("",""),
+           n.tspanner   = c(6.5, 6.5),
+           cgroup       = c("", "Results by HIV Status", ""),
+           n.cgroup     = c(1, 3, 1),
+           footer = "Values are presented as number (percentage), unless otherwise noted.",
+           output = "html")
+```

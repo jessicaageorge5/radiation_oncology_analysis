@@ -5,68 +5,40 @@ date: "3/15/2021"
 output: html_document
 ---
 
-Libraries
+# Libraries
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 library(Table1)
+library(lubridate)
+
+source("../format_data.R")
 ```
 
-Data
+# Data
 ```{r message=FALSE, warning=FALSE}
 all_patients <- read_csv("../../data/data.csv") %>% 
-  mutate(
-    hiv_status = factor(hiv_status, levels = c(1, 0), labels = c("HIV-infected", "HIV-uninfected")),
-    age_cat = factor(age_cat, levels = c(1, 2, 3), labels = c("21-39", "40-59", ">60")),
-    marital = factor(marital, levels = c(3, 1, 2), labels = c("Single", "Married/partnered", "Divorced/widowed")),
-    cancer_screening = factor(cancer_screening, levels = c(0, 1), labels = c("No", "Yes")),
-    combined_cancer_stage = factor(combined_cancer_stage, levels = c(0, 1, 2, 3, 4), labels = c("I (IA, IA1, IA2)", "I (IB1*, IB2)", "II (IIA, IIB)", "III (IIIA, IIIB, IIC)", "IV (IVA, IVB)")),
-    vaginal_hemorrhage_symp = factor(vaginal_hemorrhage_symp, levels = c(0, 1), labels = c("No", "Yes")),
-    vaginal_discharge_symp = factor(vaginal_discharge_symp, levels = c(0, 1), labels = c("No", "Yes")),
-    pelvic_pain_symp = factor(pelvic_pain_symp, levels = c(0, 1), labels = c("No", "Yes")),
-    init_performance_status = factor(case_when(as.numeric(init_performance_status) >= 90 ~ 1, 
-                          as.numeric(init_performance_status) < 90 ~ 0), levels = c(1, 0), labels = c(">=90", "<90")),
-    cd4_pos_cat = factor(case_when(hiv_status == "HIV-infected" & cd4_final >= 500 ~ 1, 
-                          hiv_status == "HIV-infected" & cd4_final >= 350 & cd4_final < 500 ~ 2,
-                          hiv_status == "HIV-infected" & cd4_final < 350 ~ 3), levels = c(1, 2, 3), labels = c(">=500", ">=350-<500", "<350")),
-    cd4_pos_cat2 = factor(case_when(hiv_status == "HIV-infected" & cd4_final >= 500 ~ 1, 
-                          hiv_status == "HIV-infected" & cd4_final >= 350 & cd4_final < 500 ~ 2,
-                          hiv_status == "HIV-infected" & cd4_final >= 200 & cd4_final < 350 ~ 3,
-                          hiv_status == "HIV-infected" & cd4_final < 200 ~ 4), levels = c(1, 2, 3, 4), labels = c(">=500", ">=350-<500", ">=200-<350", "<200")),
-    on_arv = factor(on_arv, levels = c(0, 1), labels = c("No", "Yes")),
-    chemo = factor(chemo, levels = c(0, 1), labels = c("0", ">=1")),
-    ebrt_40 = factor(case_when(ebrt_curr_dose >= 40 ~ 1, 
-                               ebrt_curr_dose < 40 ~ 0), levels = c(0, 1), labels = c("No", "Yes")),
-    brachy_20 = factor(case_when(brachy_curr_dose >= 20 ~ 1, 
-                                 brachy_curr_dose < 20 ~ 0), levels = c(0, 1), labels = c("No", "Yes")),
-    eqd2_75 = factor(case_when(eqd2 >= 75 ~ 1,
-                               eqd2 < 75 ~ 0), levels = c(0, 1), labels = c("No", "Yes")),
-    treat_response = factor(as.numeric(treat_response), levels = c(1, 2, 5), labels = c("Complete", "Partial", "Not available")),
-    vl_detect = factor(case_when(vl_final < 400 ~ 0,
-                                 vl_final >= 400 ~ 1), levels = c(0, 1), labels = c("Undetectable", "Detectable")),
-    surgery = factor(surgery, levels = c(0, 1), labels = c("No", "Yes")),
-    total_chemo_received_4 = factor(forcats::fct_recode(factor(total_chemo_received), "0" = "0", "0" = "1", "0" = "2", "0" = "3", "1" = "4", "1" = "5", "1" = "6", "1" = "7"), labels = c("<4", ">=4")))
+  format_data(article_number = 1)
 ```
 
-Create Table 1
+# Create Table 1
 ```{r}
 # Skipping HIV+ only variables: cd4_final, cd4_pos_cat, cd4_pos_cat2, on_arv, vl_detect... See below for calculations for these variables
 
 make.table(dat = all_patients,
            strat = "hiv_status",
            colnames = c("Characteristic", "HIV-infected", "HIV-uninfected", "Overall", "P"),
-           cat.varlist = c("age_cat", "marital", "cancer_screening", "combined_cancer_stage", "vaginal_hemorrhage_symp", "vaginal_discharge_symp", "pelvic_pain_symp", "init_performance_status", "chemo", "ebrt_40", "brachy_20", "eqd2_75", "treat_response", "total_chemo_received_4", "surgery"),
+           cat.varlist = c("age_cat", "marital", "cancer_screening", "combined_cancer_stage_exact_factored", "vaginal_hemorrhage_symp", "vaginal_discharge_symp", "pelvic_pain_symp", "init_performance_status", "treat_response", "surgery", "rt", "crt", "primary_surgery", "treatment"),
            cat.rmstat = list(c("row"), c("miss")),
            cat.ptype = "chisq",
-           cont.varlist = c("enroll_age", "distance", "cr_result", "hb_result", "neut_result", "wbc_result", "alb_result", "total_chemo_received", "eqd2", "treat_duration"),
+           cont.varlist = c("enroll_age", "distance", "cr_result", "hb_result", "neut_result", "wbc_result", "alb_result"),
            cont.ptype = "ttest",
            cont.rmstat = list(c("", "meansd", ""), c("q1q3")),
-           caption = "Table 1a",
-           footer = "IB1 includes patients who have received chemoradiation therapy, excluding those who have received surgery.<br><i>Abbreviations:</i> ANC = absolute neutrophil count; ARV = antiretroviral; EBRT = external beam radiation therapy; EQD2 = radiobiological equivalent dose; KPS = Karofsky performance score; WBC = white blood cells.<br>Values are presented as number (percentage), unless otherwise noted.",
+           caption = "Table 1",
+           footer = "IB1 includes patients who have received chemoradiation therapy, excluding those who have received surgery.<br><i>Abbreviations:</i> ANC = absolute neutrophil count; ARV = antiretroviral; KPS = Karofsky performance score; WBC = white blood cells.<br>Values are presented as number (percentage), unless otherwise noted.",
            tspanner     = c("",""),
-            n.tspanner   = c(87, 87),
+            n.tspanner   = c(73, 73),
             cgroup       = c("", "Results by HIV Status", ""),
             n.cgroup     = c(1, 3, 1),
-            
            output = "html")
 
 # cd4_final

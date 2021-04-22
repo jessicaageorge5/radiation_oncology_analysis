@@ -2,60 +2,131 @@
 title: "Table 2"
 author: "Jessica George and Shawna Tuli"
 date: "3/15/2021"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
-Libraries
-```{r message=FALSE, warning=FALSE}
+# Libraries
+```{r message=FALSE, warning=FALSE, include=FALSE}
 library(tidyverse)
 library(finalfit)
+library(lubridate)
+library(survival)
+
+source("../format_data.R")
 ```
 
-Data
-```{r message=FALSE, warning=FALSE}
-data <- read_csv("../data/data.csv") %>%
-    mutate(init_performance_status = factor(case_when(as.numeric(init_performance_status) >= 90 ~ 1,
-                          as.numeric(init_performance_status) < 90 ~ 0), levels = c(1, 0), labels = c(">=90", "<90")),
-    age_cat = factor(age_cat, levels = c(1, 2, 3), labels = c("21-39", "40-59", ">60")),
-    hiv_status = factor(hiv_status, levels = c(0, 1), labels = c("HIV-uninfected", "HIV-infected")),
-    marital = factor(marital, levels = c(3, 1, 2), labels = c("Single", "Married/partnered", "Divorced/widowed")),
-    total_chemo_received_0 = factor(forcats::fct_recode(factor(total_chemo_received), "0" = "0", "1" = "1", "1" = "2", "1" = "3", "1" = "4", "1" = "5", "1" = "6", "1" = "7"), labels = c("0", ">0")),
-    total_chemo_received_4 = factor(forcats::fct_recode(factor(total_chemo_received), "0" = "0", "0" = "1", "0" = "2", "0" = "3", "1" = "4", "1" = "5", "1" = "6", "1" = "7"), labels = c("<4", ">=4")),
-        combined_cancer_stage = factor(combined_cancer_stage, levels = c(0, 1, 2, 3, 4), labels = c("I (IB1*, IB2)", "I (IB1*, IB2)", "II (IIA, IIB)", "III (IIIA, IIIB)", "IV")),
-    # combined_cancer_stage = factor(combined_cancer_stage, levels = c(1, 2, 3, 4), labels = c("I (IB1*, IB2)", "II (IIA, IIB)", "III (IIIA, IIIB)", "IV")),
-    cd4_cat = factor(case_when(hiv_status == "HIV-uninfected" ~ 1,
-                               hiv_status == "HIV-infected" & cd4_final >= 500 ~ 2, 
-                               hiv_status == "HIV-infected" & cd4_final >= 350 & cd4_final < 500 ~ 3,
-                               hiv_status == "HIV-infected" & cd4_final >= 200 & cd4_final < 350 ~ 4,
-                               hiv_status == "HIV-infected" & cd4_final < 200 ~ 5), levels = c(1,2,3,4)),
-    time_alive_path = time_alive_path/365
-  )
-
-label(data$age_cat) <- "Age"
-label(data$hiv_status) <- "HIV Status"
-label(data$cr_result) <- "Baseline Cr"
-label(data$hb_result) <- "Baseline Hb"
-label(data$eqd2) <- "EQD2"
-label(data$combined_cancer_stage) <- "Disease stage"
-label(data$total_chemo_received_0) <- "No. of chemo cycles received"
-label(data$total_chemo_received_4) <- "No. of chemo cycles received"
+# Data
+```{r message=FALSE, warning=FALSE, include=FALSE}
+data <- read_csv("../../data/data.csv") %>% 
+  format_data(article_number = 1)
 ```
 
-Create Table 2
+# Univariate Results
 ```{r}
-all_explanatory <- c("init_performance_status", "marital", "alb_result", "distance", "age_cat", "hiv_status", "hb_result", "combined_cancer_stage")
-
-all_explanatory2 <- c("init_performance_status", "age_cat", "hiv_status", "hb_result", "combined_cancer_stage")
-
 dependent <- "Surv(time_alive_path, vital_status)"
 
-# Table with chemo cycles (<4 & >=4)
-data %>%
-  finalfit(dependent, all_explanatory) %>%
-  knitr::kable()
+all_univariate <- c("init_performance_status", "marital", "alb_result", "distance", "age_cat", "hiv_status", "hiv_cd4_cat2", "hb_result", "combined_cancer_stage", "vl_detect_cat")
 
 data %>%
-  finalfit(dependent, all_explanatory2) %>%
+  finalfit(dependent, all_univariate) %>%
+  select("Dependent: Surv(time_alive_path, vital_status)", " ", "all", "HR (univariable)") %>% 
+  knitr::kable()
+```
+
+
+# Initial Multivariate Models (1-4)
+
+## Multivariate Model 1
+### Factors: performance status, age (category), HIV status, Hb, and stage
+### AIC: 3940.583
+```{r}
+all_multivariate1 <- c("init_performance_status", "age_cat", "hiv_status", "hb_result", "combined_cancer_stage")
+
+data %>%
+  finalfit(dependent, all_multivariate1) %>%
+  select("Dependent: Surv(time_alive_path, vital_status)", " ", "all", "HR (multivariable)") %>% 
   knitr::kable()
 
+AIC(coxph(Surv(time_alive_path, vital_status) ~ init_performance_status + age_cat + hiv_status + hb_result + combined_cancer_stage, data = data))
+```
+
+## Multivariate Model 2
+### Factors: performance status, age (category), HIV-CD4 (category), Hb, and stage
+### AIC: 3326.612
+``` {r}
+all_multivariate2 <- c("init_performance_status", "age_cat", "hiv_cd4_cat2", "hb_result", "combined_cancer_stage")
+
+data %>%
+  finalfit(dependent, all_multivariate2) %>%
+    select("Dependent: Surv(time_alive_path, vital_status)", " ", "all", "HR (multivariable)") %>% 
+  knitr::kable()
+
+AIC(coxph(Surv(time_alive_path, vital_status) ~ init_performance_status + age_cat + hiv_cd4_cat2 + hb_result + combined_cancer_stage, data = data))
+```
+
+## Multivariate Model 3
+### Factors: performance status, age (category), HIV-CD4 (category), Hb, Alb, VL, and stage
+### AIC: 2236.844
+``` {r}
+all_multivariate3 <- c("init_performance_status", "age_cat", "hiv_cd4_cat2", "hb_result", "combined_cancer_stage", "vl_detect2", "alb_result")
+
+data %>%
+  finalfit(dependent, all_multivariate3) %>%
+    select("Dependent: Surv(time_alive_path, vital_status)", " ", "all", "HR (multivariable)") %>% 
+  knitr::kable()
+
+AIC(coxph(Surv(time_alive_path, vital_status) ~ init_performance_status + age_cat + hiv_cd4_cat2 + hb_result + combined_cancer_stage + vl_detect2 + alb_result, data = data))
+```
+
+## Multivariate Model 4
+### Factors: performance status, age (category), HIV-CD4 (category), Hb, Alb, and stage
+### AIC: 2233.012 -- Lower AIC = Better model!
+``` {r}
+all_multivariate4 <- c("init_performance_status", "age_cat", "hiv_cd4_cat2", "hb_result", "combined_cancer_stage", "alb_result")
+
+data %>%
+  finalfit(dependent, all_multivariate4) %>%
+    select("Dependent: Surv(time_alive_path, vital_status)", " ", "all", "HR (multivariable)") %>% 
+  knitr::kable()
+
+AIC(coxph(Surv(time_alive_path, vital_status) ~ init_performance_status + age_cat + hiv_cd4_cat2 + hb_result + combined_cancer_stage + alb_result, data = data))
+```
+
+
+# Final Models
+
+## Survival Model
+```{r}
+all_multivariate <- c("init_performance_status", "age_cat", "hiv_status", "hb_result", "alb_result", "combined_cancer_stage")
+
+data %>%
+  finalfit(dependent, all_multivariate) %>%
+  knitr::kable()
+
+AIC(coxph(Surv(time_alive_path, vital_status) ~ init_performance_status + age_cat + hiv_status + hb_result + alb_result + combined_cancer_stage, data = data))
+```
+
+## Supplemental Survival Model
+```{r}
+all_multivariate_sup <- c("init_performance_status", "age_cat", "hiv_cd4_cat2", "hb_result", "alb_result", "combined_cancer_stage")
+
+data %>%
+  finalfit(dependent, all_multivariate_sup) %>%
+  knitr::kable()
+
+AIC(coxph(Surv(time_alive_path, vital_status) ~ init_performance_status + age_cat + hiv_cd4_cat2 + hb_result + combined_cancer_stage, data = data))
+```
+
+## Survival Model on Treatment Patients
+```{r}
+treated <- data %>% 
+  filter(treatment == "Yes")
+
+treated %>%
+  finalfit(dependent, all_multivariate) %>%
+  knitr::kable()
+
+AIC(coxph(Surv(time_alive_path, vital_status) ~ init_performance_status + age_cat + hiv_status + hb_result + alb_result + combined_cancer_stage, data = treated))
 ```

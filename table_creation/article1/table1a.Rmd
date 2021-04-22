@@ -1,0 +1,44 @@
+---
+title: "Table 1a"
+author: "Jessica George and Shawna Tuli"
+date: "3/15/2021"
+output: html_document
+---
+
+# Libraries
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(Table1)
+library(lubridate)
+
+source("../format_data.R")
+```
+
+# Data
+```{r message=FALSE, warning=FALSE}
+all_patients <- read_csv("../../data/data.csv") %>% 
+  format_data(article_number = 1)
+```
+
+# Create Table 1a (Treatment Characteristics for eligible RT/CRT patients)
+```{r}
+rt_crt_eligible <- all_patients %>% 
+  filter(combined_cancer_stage_exact >= 4 & surgery != "Yes")
+
+make.table(dat = rt_crt_eligible,
+           strat = "hiv_status",
+           colnames = c("Characteristic", "HIV-infected", "HIV-uninfected", "Overall", "P"),
+           cat.varlist = c("chemo", "ebrt_40", "brachy_cat", "eqd2_75", "total_chemo_received_4", "treat_response", "total_chemo_received_cat", "rt_received"),
+           cat.rmstat = list(c("row"), c("miss")),
+           cat.ptype = "chisq",
+           cont.varlist = c("total_chemo_received", "eqd2", "treat_duration"),
+           cont.ptype = "ttest",
+           cont.rmstat = list(c("", "meansd", ""), c("q1q3")),
+           caption = "Table 1a",
+           footer = "Abbreviations:</i> EBRT = external beam radiation therapy; EQD2 = radiobiological equivalent dose.<br>Values are presented as number (percentage), unless otherwise noted.",
+           tspanner     = c("",""),
+           n.tspanner   = c(38.5, 38.5),
+           cgroup       = c("", "Results by HIV Status", ""),
+           n.cgroup     = c(1, 3, 1),
+           output = "html")
+```

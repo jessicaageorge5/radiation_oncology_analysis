@@ -1,0 +1,36 @@
+---
+title: "Table 5b"
+author: "Shawna Tuli and Jessica George"
+date: "3/15/2021"
+output: html_document
+---
+
+# Libraries
+```{r}
+library(tidyverse)
+library(finalfit)
+
+source("../format_data.R")
+```
+
+# Data
+```{r message=FALSE, warning=FALSE}
+data <- read_csv("../../data/data.csv") %>% 
+  format_data(article_number = 2)
+```
+
+# Create Table 5b
+```{r}
+stratified_explanatory <- c("age_cat", "hb_result", "combined_cancer_stage", "total_chemo_received_4", "eqd2")
+
+
+## Combining stages 3 & 4
+data_combined34stage <- data %>% 
+  mutate(combined_cancer_stage = factor(combined_cancer_stage, levels = c("I (IB1*, IB2)", "II (IIA, IIB)", "III (IIIA, IIIB)", "IV"), labels = c("I (IB1*, IB2)", "II (IIA, IIB)", "III-IV (IIIA, IIIB, IV)", "III-IV (IIIA, IIIB, IV)")))
+
+# HIV Neg
+data_combined34stage %>% 
+  filter(hiv_status == "HIV-uninfected") %>% 
+  finalfit(dependent, stratified_explanatory) %>% 
+  knitr::kable()
+```

@@ -1,0 +1,62 @@
+---
+title: "Multinomial Logistic Regression"
+author: "Jessica George and Shawna Tuli"
+date: "4/13/2021"
+output: html_document
+---
+
+# Libraries
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(readxl)
+library(survival)
+library(lubridate)
+library(nnet)
+library(knitr)
+
+source("../format_data.R")
+```
+
+# Data
+```{r message=FALSE, warning=FALSE}
+data <- read_excel("../../data/time_to_treatment_data.xlsx") %>% 
+  format_data(article_number = 3)
+```
+
+# Functions
+```{r}
+overall_univariate_logistic_regresion <- function(resp, predictors) {
+  formula <- as.formula(paste(resp, predictors, sep = " ~ "))
+  overall.logist <- multinom(formula, data = data)
+  return(overall.logist)
+}
+
+overall_multivariate_logistic_regresion <- function(resp, predictors) {
+  formula <- as.formula(paste(resp, paste(predictors, collapse = " + "), sep = " ~ "))
+  overall.logist <- multinom(formula, data = data)
+  return(overall.logist)
+}
+```
+
+# Univariate Models
+```{r results="asis"}
+uni_predictors <- c("enroll_age", "age_cat", "marital", "distance", "init_performance_status", "hiv_status", "hiv_cd4_cat", "hiv_cd4_cat2", "hb_result", "wbc_result", "alb_result", "combined_cancer_stage", "total_chemo_received", "total_chemo_received_4", "eqd2", "eqd2_75", "ebrt_40", "pathology_year", "cancer_screening")
+
+for (resp in c("path_treatment_group")) {
+  for (uni_predictor in uni_predictors) {
+    cat("\n## Path to Treatment Time Difference Group ~ ", uni_predictor, "  \n")
+    model <- overall_univariate_logistic_regresion(resp, uni_predictor)
+    cat("```")
+    model_summary <- summary(model)
+    print(model_summary)
+    z <- model_summary$coefficients/model_summary$standard.errors
+    p <- (1 - pnorm(abs(z), 0, 1))*2 # two-tailed z test
+    output <- rbind(model_summary$coefficients[1,], model_summary$standard.errors[1,], z[1,], p[1,])
+    rownames(output) <- c("Coefficient","Std. Errors","z stat","p value")
+    #kable(output)
+    print(output)
+    print(exp(coef(model)))
+    cat("```")  
+  }
+}
+```

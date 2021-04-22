@@ -5,38 +5,32 @@ date: "3/15/2021"
 output: html_document
 ---
 
-Libraries
+# Libraries
 ```{r}
 library(tidyverse)
 library(finalfit)
+
+source("../format_data.R")
 ```
 
-Data
+# Data
 ```{r message=FALSE, warning=FALSE}
 data <- read_csv("../../data/data.csv") %>% 
-  filter(surgery == 0) %>%
-    mutate(init_performance_status = factor(case_when(as.numeric(init_performance_status) >= 90 ~ 1,
-                          as.numeric(init_performance_status) < 90 ~ 0), levels = c(1, 0), labels = c(">=90", "<90")),
-    age_cat = factor(age_cat, levels = c(1, 2, 3), labels = c("21-39", "40-59", ">60")),
-    hiv_status = factor(hiv_status, levels = c(0, 1), labels = c("HIV-uninfected", "HIV-infected")),
-    marital = factor(marital, levels = c(3, 1, 2), labels = c("Single", "Married/partnered", "Divorced/widowed")),
-    total_chemo_received_0 = factor(forcats::fct_recode(factor(total_chemo_received), "0" = "0", "1" = "1", "1" = "2", "1" = "3", "1" = "4", "1" = "5", "1" = "6", "1" = "7"), labels = c("0", ">0")),
-    total_chemo_received_4 = factor(forcats::fct_recode(factor(total_chemo_received), "0" = "0", "0" = "1", "0" = "2", "0" = "3", "1" = "4", "1" = "5", "1" = "6", "1" = "7"), labels = c("<4", ">=4")),
-        combined_cancer_stage = factor(combined_cancer_stage, levels = c(0, 1, 2, 3, 4), labels = c("I (IB1*, IB2)", "I (IB1*, IB2)", "II (IIA, IIB)", "III (IIIA, IIIB)", "IV")),
-    # combined_cancer_stage = factor(combined_cancer_stage, levels = c(1, 2, 3, 4), labels = c("I (IB1*, IB2)", "II (IIA, IIB)", "III (IIIA, IIIB)", "IV")),
-    cd4_cat = factor(case_when(hiv_status == "HIV-uninfected" ~ 1,
-                               hiv_status == "HIV-infected" & cd4_final >= 500 ~ 2, 
-                               hiv_status == "HIV-infected" & cd4_final >= 350 & cd4_final < 500 ~ 3,
-                               hiv_status == "HIV-infected" & cd4_final >= 200 & cd4_final < 350 ~ 4,
-                               hiv_status == "HIV-infected" & cd4_final < 200 ~ 5), levels = c(1,2,3,4)),
-    time_alive_path = time_alive_path/365)
+  # Grab all patients Stage IB and above who were eligible for treatment
+  filter(surgery == 0 & primary_surgery == 0 &
+           combined_cancer_stage_exact >= 4) %>% 
+  format_data(article_number = 1)
 ```
 
-Create Table 2a
+# Create Table 2a
 ```{r}
-treat_explanatory <- c("init_performance_status", "marital", "alb_result", "distance", "age_cat", "hiv_status", "hb_result", "combined_cancer_stage", "total_chemo_received_4", "eqd2")
+treat_explanatory <- c("init_performance_status", "marital", "alb_result", "distance", "age_cat", "hiv_status", "hb_result", "combined_cancer_stage", "total_chemo_received_4", "eqd2", "rt")
 
 treat_explanatory2 <- c("init_performance_status", "age_cat", "hiv_status", "hb_result", "combined_cancer_stage", "total_chemo_received_4", "eqd2")
+
+treat_explanatory3 <- c("init_performance_status", "age_cat", "hiv_status", "hb_result", "combined_cancer_stage", "total_chemo_received_4", "rt")
+
+treat_explanatory4 <- c("init_performance_status", "age_cat", "hiv_status", "hb_result", "combined_cancer_stage", "rt")
 
 dependent <- "Surv(time_alive_path, vital_status)"
 
@@ -48,5 +42,15 @@ data %>%
 # Survival model variables only
 data %>%
   finalfit(dependent, treat_explanatory2) %>%
+  knitr::kable()
+
+# Survival model variables only
+data %>%
+  finalfit(dependent, treat_explanatory3) %>%
+  knitr::kable()
+
+# Survival model variables only
+data %>%
+  finalfit(dependent, treat_explanatory4) %>%
   knitr::kable()
 ```
