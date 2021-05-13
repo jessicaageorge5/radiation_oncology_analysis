@@ -1,0 +1,49 @@
+---
+title: "article_4"
+author: "Shawna Tuli and Jessica George"
+date: "4/19/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Libraries
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(finalfit)
+library(lubridate)
+library(survival)
+```
+
+# Data
+```{r message=FALSE, warning=FALSE}
+data <- read_csv("article_4_cleaned_data.csv")
+data
+```
+
+# Rename columns
+```{r}
+data = data %>% rename('HIV' = 'HIV status', 'Vital' = 'Vital status', 'Date' = 'Last Follow up date or date of death of died', 'VL' = 'VL at cancer diagnosis', 'CD4' = 'CD4 at cancer diagnosis', 'Cycles' = 'Cycles of chemo', 'Path' = 'Path response') 
+data
+```
+
+# Factor
+```{r}
+data %>% mutate(hiv_status = factor(HIV), stage = factor(Stage), vl = factor(VL), path = factor(Path)) -> data
+```
+
+```{r}
+data
+```
+
+# Univariate Results
+```{r}
+dependent <- "Surv(date_of_death_and_start_date, Vital)"
+
+values <- c('Age', 'stage', 'HIV', 'Cycles', 'CD4', 'path') 
+
+data %>%
+  finalfit(dependent, values) %>%
+  select("Dependent: Surv(date_of_death_and_start_date, Vital)", " ", "all", "HR (univariable)") %>% 
+  knitr::kable()
+```
