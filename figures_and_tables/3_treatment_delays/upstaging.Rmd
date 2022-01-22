@@ -1,0 +1,119 @@
+---
+title: "Upstaging"
+author: "Jessica George and Shawna Tuli"
+date: "4/11/2021"
+output: html_document
+---
+
+# Libraries
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(readxl)
+library(finalfit)
+library(survival)
+library(lubridate)
+
+source("../format_data.R")
+```
+
+# Data
+```{r message=FALSE, warning=FALSE}
+data <- read_excel("../../data/time_to_treatment_data.xlsx") %>% 
+  format_data(article_number = 3)
+```
+
+# Time to treatment < 120 days
+## Only large data patients have fin figo (small only has init figo)
+```{r}
+data %>% 
+  # Filter for people with time to treatment < 120 days
+  # Second filter removes small data patients
+  filter(path_to_treatment_difference < 120 & !is.na(final_cancer_stage_exact)) %>% 
+  mutate(
+    init_cancer_stage_exact = as.numeric(init_cancer_stage_exact),
+    final_cancer_stage_exact = as.numeric(final_cancer_stage_exact),
+    stage_difference = final_cancer_stage_exact - init_cancer_stage_exact) %>% 
+  # Filter for upstaging
+  filter(stage_difference > 0) %>% 
+  summarise("Upstaged (%)" = (n()/484)*100)
+```
+
+# Time to treatment >= 120 days
+## Only large data patients have fin figo (small only has init figo)
+```{r}
+data %>% 
+  # Filter for people with time to treatment => 120 days
+  # Second filter removes small data patients
+  filter(path_to_treatment_difference >= 120 & !is.na(final_cancer_stage_exact)) %>% 
+  mutate(
+    init_cancer_stage_exact = as.numeric(init_cancer_stage_exact),
+    final_cancer_stage_exact = as.numeric(final_cancer_stage_exact),
+    stage_difference = final_cancer_stage_exact - init_cancer_stage_exact) %>% 
+  # Filter for upstaging
+  filter(stage_difference > 0) %>% 
+  summarise("Upstaged (%)" = (n()/154)*100)
+```
+
+# Time to treatment < 150 days
+## Only large data patients have fin figo (small only has init figo)
+```{r}
+data %>% 
+  # Filter for people with time to treatment < 150 days
+  # Second filter removes small data patients
+  filter(path_to_treatment_difference < 150 & !is.na(final_cancer_stage_exact)) %>% 
+  mutate(
+    init_cancer_stage_exact = as.numeric(init_cancer_stage_exact),
+    final_cancer_stage_exact = as.numeric(final_cancer_stage_exact),
+    stage_difference = final_cancer_stage_exact - init_cancer_stage_exact) %>% 
+  # Filter for upstaging
+  filter(stage_difference > 0) %>% 
+  summarise("Upstaged (%)" = (n()/527)*100)
+```
+
+# Time to treatment >= 150 days
+## Only large data patients have fin figo (small only has init figo)
+```{r}
+data %>% 
+  # Filter for people with time to treatment => 150 days
+  # Second filter removes small data patients
+  filter(path_to_treatment_difference >= 150 & !is.na(final_cancer_stage_exact)) %>% 
+  mutate(
+    init_cancer_stage_exact = as.numeric(init_cancer_stage_exact),
+    final_cancer_stage_exact = as.numeric(final_cancer_stage_exact),
+    stage_difference = final_cancer_stage_exact - init_cancer_stage_exact) %>% 
+  # Filter for upstaging
+  filter(stage_difference > 0) %>% 
+  summarise("Upstaged (%)" = (n()/111)*100)
+```
+
+# Time to treatment < 180 days
+## Only large data patients have fin figo (small only has init figo)
+```{r}
+data %>% 
+  # Filter for people with time to treatment < 180 days
+  # Second filter removes small data patients
+  filter(path_to_treatment_difference < 180 & !is.na(final_cancer_stage_exact)) %>% 
+  mutate(
+    init_cancer_stage_exact = as.numeric(init_cancer_stage_exact),
+    final_cancer_stage_exact = as.numeric(final_cancer_stage_exact),
+    stage_difference = final_cancer_stage_exact - init_cancer_stage_exact) %>% 
+  # Filter for upstaging
+  filter(stage_difference > 0) %>% 
+  summarise("Upstaged (%)" = (n()/553)*100)
+```
+
+# Time to treatment >= 180 days
+## Only large data patients have fin figo (small only has init figo)
+```{r}
+data %>% 
+  # Filter for people with time to treatment => 180 days
+  # Second filter removes small data patients
+  filter(path_to_treatment_difference >= 180 & !is.na(final_cancer_stage_exact)) %>% 
+  mutate(
+    init_cancer_stage_exact = as.numeric(init_cancer_stage_exact),
+    final_cancer_stage_exact = as.numeric(final_cancer_stage_exact),
+    stage_difference = final_cancer_stage_exact - init_cancer_stage_exact) %>% 
+  # Filter for upstaging
+  filter(stage_difference > 0) %>% 
+  summarise("Upstaged (%)" = (n()/85)*100)
+```

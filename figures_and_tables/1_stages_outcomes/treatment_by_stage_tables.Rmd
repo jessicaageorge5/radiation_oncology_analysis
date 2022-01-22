@@ -1,0 +1,36 @@
+---
+title: "Treatment by Stage Stats"
+author: "Jessica George"
+date: "11/16/2021"
+output: html_document
+---
+
+# Libraries
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(Table1)
+library(lubridate)
+
+source("../format_data.R")
+
+options(dplyr.print_max = 1e9)
+```
+
+# Data
+```{r message=FALSE, warning=FALSE}
+all_patients <- read_csv("../../data/data.csv") %>% 
+  format_data(article_number = 1)
+```
+
+# Run commands
+```{r}
+# Stats
+all_patients %>% group_by(combined_cancer_stage_nonnumerical, treatment) %>% summarise(n())
+all_patients %>% group_by(combined_cancer_stage_nonnumerical, surgery_only) %>% summarise(n())
+all_patients %>% group_by(combined_cancer_stage_nonnumerical, rt) %>% summarise(n())
+all_patients %>% group_by(combined_cancer_stage_nonnumerical, crt) %>% summarise(n())
+all_patients %>% group_by(combined_cancer_stage_nonnumerical, chemo_only) %>% summarise(n())
+all_patients %>% group_by(combined_cancer_stage_nonnumerical, primary_surgery_chemo) %>% summarise(n())
+all_patients %>% group_by(combined_cancer_stage_nonnumerical, primary_surgery_rt) %>% summarise(n())
+all_patients %>% group_by(combined_cancer_stage_nonnumerical, primary_surgery_crt) %>% summarise(n())
+```

@@ -1,0 +1,46 @@
+---
+title: "Check Missing Data x Redcap"
+author: "Jessica George and Shawna Tuli"
+date: "5/25/2021"
+output: html_document
+---
+
+# Libraries
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(Table1)
+library(lubridate)
+
+source("format_data.R")
+```
+
+# Data
+```{r message=FALSE, warning=FALSE}
+all_patients <- read_csv("../data/data.csv") %>% 
+  format_data(article_number = 1)
+```
+
+# Variable to Investigate
+
+## Age
+```{r}
+all_patients %>% filter(is.na(enroll_age))
+
+all_patients %>% filter(is.na(age_cat))
+```
+
+## Marital status
+```{r}
+all_patients %>% filter(is.na(marital))
+# small data patient, will not be able to recover marital status
+```
+
+## Cancer screening
+```{r}
+all_patients %>% filter(is.na(cancer_screening))
+```
+
+## Stage
+```{r}
+all_patients %>% filter(is.na(combined_cancer_stage))
+```

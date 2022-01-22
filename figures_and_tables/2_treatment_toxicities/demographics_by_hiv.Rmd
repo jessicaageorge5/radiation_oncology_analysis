@@ -1,0 +1,58 @@
+---
+title: "Table 2: Demographics and toxicities by HIV status"
+author: "Shawna Tuli and Jessica George"
+date: "01/20/22"
+output: 
+  html_document:
+    toc: True
+    toc_depth: 2
+---
+
+# Libraries
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(Table1)
+
+source("../format_data.R")
+```
+
+
+# Data
+```{r message=FALSE, warning=FALSE}
+data <- read_csv("../../data/data.csv") %>% 
+  format_data(article_number = 2)
+
+tox_cols <- c("hiv_status", "pelvic_pain_tox", "vaginal_discharge_tox", "vaginal_hemorrhage_tox", "fatigue_tox", "weight_loss_tox", "nausea_tox", "vomiting_tox", "urine_freq_tox", "urine_incontinence_tox", "urine_urge_tox", "diarrhea_tox", "dermatitis_tox")
+
+data[tox_cols] <- lapply(data[tox_cols], factor)
+```
+
+
+# Table 2 (by HIV status)
+```{r}
+make.table(dat = data,
+           strat = "hiv_status",
+           colnames = c("Characteristic", "HIV-uninfected", 
+                        "HIV-infected", "Overall", "P"),
+           cat.varlist = c("pelvic_pain_tox", "vaginal_discharge_tox",
+                           "vaginal_hemorrhage_tox", "fatigue_tox",
+                           "weight_loss_tox", "nausea_tox", "vomiting_tox",
+                           "urine_freq_tox", "urine_incontinence_tox",
+                           "urine_urge_tox", "diarrhea_tox", "dermatitis_tox",
+                           "cr_tox_grade", "hb_tox_grade", "wbc_tox_grade",
+                           "neut_tox_grade", "alb_tox_grade"),
+           cat.rmstat = list(c("row"), c("miss")),
+           cat.ptype = "chisq",
+           cont.varlist = c("cr_result_tox", "hb_min_result_tox", 
+                            "wbc_min_result_tox", "neut_min_result_tox", 
+                            "alb_min_result_tox"),
+           cont.ptype = "ttest",
+           cont.rmstat = list(c("meansd"), c("q1q3")),
+           caption = "Table 2",
+           footer = "",
+           tspanner     = c("",""),
+           n.tspanner   = c(89.5, 89.5),
+           cgroup       = c("", "Results by HIV Status", ""),
+           n.cgroup     = c(1, 3, 1),
+           output = "html")
+```

@@ -1,0 +1,58 @@
+---
+title: "Table D: UVA and MVA Cox (RT/CRT Eligible)"
+author: "Jessica George and Shawna Tuli"
+date: "1/20/22"
+output: 
+  html_document:
+      toc: True
+      toc_depth: 2
+---
+
+# Libraries
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(finalfit)
+library(lubridate)
+library(survival)
+
+source("../format_data.R")
+```
+
+
+# Data
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data <- read_csv("../../data/data.csv") %>% 
+  format_data(article_number = 1)
+
+# filter for stage IB2 and above
+data <- data %>% 
+  filter(combined_cancer_stage_exact >= 6)
+```
+
+
+# Univariate Cox
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+dependent <- "Surv(time_alive_path, vital_status)"
+
+predictors <- c("enroll_age", "age_cat", "marital", "distance_factored2", "hiv_status", "cr_opt",  "cr_result_s100", "hb_opt", "hb_result", "neut_opt", "neut_result_s100", "wbc_opt", "wbc_result_s100", "alb_opt", "alb_result_s100", "init_performance_status", "combined_cancer_stage_exact_factored", "treat_response", "eqd2_79", "total_chemo_received_4", "total_chemo_received_cat")
+
+data %>%
+  finalfit(dependent, predictors) %>%
+  select("Dependent: Surv(time_alive_path, vital_status)", " ", "all", "HR (univariable)") %>% 
+  knitr::kable()
+```
+
+
+# Multivariate Cox
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+dependent <- "Surv(time_alive_path, vital_status)"
+
+all_multivariate <- c("age_cat", "hiv_status", "hb_opt", "cr_opt", "init_performance_status", "combined_cancer_stage_exact_factored", "treat_response", "eqd2_79", "total_chemo_received_4")
+
+data %>%
+  finalfit(dependent, all_multivariate) %>%
+  select("Dependent: Surv(time_alive_path, vital_status)", " ", "all", "HR (multivariable)") %>% 
+  knitr::kable()
+
+AIC(coxph(Surv(time_alive_path, vital_status) ~ age_cat + hiv_status + hb_opt + cr_opt + init_performance_status + combined_cancer_stage_exact_factored + treat_response + eqd2_79 + total_chemo_received_4, data))
+```

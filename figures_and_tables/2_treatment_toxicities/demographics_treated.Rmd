@@ -1,0 +1,158 @@
+---
+title: "Table 1: Demographics (Overall and by HIV status for treated)"
+author: "Shawna Tuli and Jessica George"
+date: "01/20/22"
+output: 
+  html_document:
+    toc: True
+    toc_depth: 2
+---
+
+# Libraries
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(Table1)
+
+source("../format_data.R")
+```
+
+
+# Data
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+treatment_patients <- read_csv("../../data/data.csv") %>% 
+  format_data(article_number = 2)
+```
+
+
+# Functions
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+group_summary <- function(data, group_var) {
+  return(data %>% 
+           group_by(!!group_var) %>% 
+           summarise(n())
+        )
+}
+
+summary_stats <- function(data, var) {
+  data %>% 
+    select(!!var) %>% 
+    summary()
+}
+```
+
+
+# Table 1 (Overall)
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# hiv status
+group_summary(treatment_patients, quo(hiv_status))
+
+# age
+summary_stats(treatment_patients, quo(enroll_age))
+group_summary(treatment_patients, quo(age_cat))
+
+# marital status
+group_summary(treatment_patients, quo(marital))
+
+# previously screened for cancer
+group_summary(treatment_patients, quo(cancer_screening))
+
+# distance from treatment facility
+group_summary(treatment_patients, quo(distance_factored))
+
+# disease stage
+group_summary(treatment_patients, quo(combined_cancer_stage_exact_factored2))
+
+# symptoms at presentation
+## vaginal bleeding
+group_summary(treatment_patients, quo(vaginal_hemorrhage))
+## vaginal discharge
+group_summary(treatment_patients, quo(vaginal_discharge))
+## pelvic pain
+group_summary(treatment_patients, quo(pelvic_pain))
+
+# baseline lab values
+## cr
+summary_stats(treatment_patients, quo(cr_result))
+## hb
+summary_stats(treatment_patients, quo(hb_result))
+## anc (neut)
+summary_stats(treatment_patients, quo(neut_result))
+## wbc
+summary_stats(treatment_patients, quo(wbc_result))
+## alb
+summary_stats(treatment_patients, quo(alb_result))
+
+# baseline performance status
+group_summary(treatment_patients, quo(init_performance_status))
+
+# hiv characteristics
+## CD4
+treatment_patients %>% filter(hiv_status == "HIV-infected") %>% select(cd4_final) %>% summary()
+## CD4 category
+treatment_patients %>% filter(hiv_status == "HIV-infected") %>% select(cd4_pos_cat2) %>% summary()
+## VL
+treatment_patients %>% filter(hiv_status == "HIV-infected") %>% select(vl_detect) %>% summary()
+## on ARV
+treatment_patients %>% filter(hiv_status == "HIV-infected") %>% select(on_arv) %>% summary()
+
+# treatment
+## RT
+group_summary(treatment_patients, quo(rt))
+## CRT
+group_summary(treatment_patients, quo(crt))
+```
+
+# Table 1 (HIV status)
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Skipping HIV+ only variables: cd4_final, cd4_pos_cat, cd4_pos_cat2, on_arv, vl_detect... See below for calculations for these variables
+
+make.table(dat = treatment_patients,
+           strat = "hiv_status",
+           colnames = c("Characteristic", "HIV-infected", 
+                        "HIV-uninfected", "Overall", "P"),
+           cat.varlist = c("age_cat", "marital", "cancer_screening", 
+                           "distance_factored2", 
+                           "combined_cancer_stage_exact_factored2", 
+                           "vaginal_hemorrhage_symp", "vaginal_discharge_symp", 
+                           "pelvic_pain_symp", "init_performance_status", 
+                           "treat_response", "rt", "crt"),
+           cat.rmstat = list(c("row"), c("miss")),
+           cat.ptype = "chisq",
+           cont.varlist = c("enroll_age", "cr_result", "hb_result", 
+                            "neut_result", "wbc_result", "alb_result"),
+           cont.ptype = "ttest",
+           cont.rmstat = list(c("", "meansd", ""), c("q1q3")),
+           caption = "Table 1",
+           footer = "",
+           tspanner     = c("",""),
+            n.tspanner   = c(63.5,63.5),
+            cgroup       = c("", "Results by HIV Status", ""),
+            n.cgroup     = c(1, 3, 1),
+           output = "html")
+
+# cd4_final
+# median
+sapply(select(filter(treatment_patients, hiv_status == "HIV-infected"), cd4_final), median, na.rm = T)
+# quantiles
+quantile(select(filter(treatment_patients, hiv_status == "HIV-infected"), cd4_final), probs = c(0.25, 0.75), na.rm = T)
+
+# cd4_pos_cat
+# counts
+treatment_patients %>% filter(hiv_status == "HIV-infected") %>% group_by(cd4_pos_cat) %>% summarise(n())
+
+# cd4_pos_cat2
+# counts
+treatment_patients %>% filter(hiv_status == "HIV-infected") %>% group_by(cd4_pos_cat2) %>% summarise(n())
+
+# vl_final
+# mean
+sapply(select(filter(treatment_patients, hiv_status == "HIV-infected"), vl_final), median, na.rm = T)
+# quantiles
+quantile(select(filter(treatment_patients, hiv_status == "HIV-infected"), vl_final), probs = c(0.25, 0.75), na.rm = T)
+
+# on_arv
+treatment_patients %>% filter(hiv_status == "HIV-infected") %>% group_by(on_arv) %>% summarise(n())
+
+# vl_detect
+treatment_patients %>% filter(hiv_status == "HIV-infected") %>% group_by(vl_detect) %>% summarise(n())
+```

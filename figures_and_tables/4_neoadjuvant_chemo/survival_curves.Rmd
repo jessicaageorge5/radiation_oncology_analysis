@@ -1,0 +1,125 @@
+---
+title: "Kaplan-Meier Survival Curves"
+author: "Shawna Tuli and Jessica George"
+date: "01/20/22"
+output:
+  html_document:
+    toc: True
+    toc_depth: 2
+---
+
+# Libraries
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(survival)
+library(survminer)
+library(DescTools)
+library(patchwork)
+```
+
+
+# Data
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data <- read_csv("../../data/article_4_cleaned_data.csv") %>% 
+  rename('HIV' = 'HIV status', 
+         'Vital' = 'Vital status', 
+         'Date' = 'Last Follow up date or date of death of died', 
+         'VL' = 'VL at cancer diagnosis', 
+         'CD4' = 'CD4 at cancer diagnosis', 
+         'Cycles' = 'Cycles of chemo') %>% 
+  mutate(hiv_status = factor(HIV), 
+         stage = factor(Stage), 
+         vl = factor(VL))
+
+all_patients <- read_csv("../../data/data.csv")
+# subset for patients within data only
+
+all_patients <- all_patients %>% 
+  filter(patient_id %in% data$`Study ID`)
+## they are not from there!
+```
+
+
+# KMs on All Patients
+## 1) OS
+```{r echo=TRUE, fig.width=8, message=FALSE, warning=FALSE}
+stage_survival <- survfit(Surv(date_of_death_and_start_date, Vital) ~ 1, data)
+
+stage_plot <- ggsurvplot(fit = stage_survival,
+                         data,
+                         xlab = "Years since pathology report",
+                         xlim = c(0, 5),
+                         ylab = "Proportion surviving",
+                         title = "Kaplan-Meier Survival Estimates",
+                         break.time.by = 1,
+                         palette = c("#333333", "#E69F00", "#009E73"),
+                         conf.int = FALSE,
+                         censor = TRUE,
+                         legend.title="",
+                         legend.labs = c("All Patients"),
+                         risk.table = TRUE,
+                         risk.table.height = 0.2,
+                         tables.theme = theme_cleantable())
+
+stage_plot$plot <- stage_plot$plot +
+  theme(plot.title = element_text(hjust = 0.4), 
+        panel.grid.major.y = element_line(color = "#EAF2F3"), 
+        plot.background = element_rect(fill = "#EAF2F3"), 
+        axis.title.y = element_text(vjust = 1))
+
+stage_plot$plot
+```
+```{r echo=TRUE, fig.height=2, fig.width=8, message=FALSE, warning=FALSE}
+stage_plot$table <- stage_plot$table + 
+  theme(plot.title = element_text(hjust = -0.03, size = 14),
+        plot.background = element_rect(fill = "#EAF2F3"), 
+        panel.background = element_rect(fill = "#EAF2F3"))
+
+stage_plot$table
+```
+
+## 2) Cause-specific survival status (cancer-related deaths only)
+```{r echo=TRUE, fig.width=8, message=FALSE, warning=FALSE}
+cause_specific_data <- data %>% 
+  filter(`Study ID` != 5397)
+
+stage_survival <- survfit(Surv(date_of_death_and_start_date, Vital) ~ 1, cause_specific_data)
+
+stage_plot <- ggsurvplot(fit = stage_survival,
+                         data,
+                         xlab = "Years since pathology report",
+                         xlim = c(0, 5),
+                         ylab = "Proportion surviving",
+                         title = "Kaplan-Meier Survival Estimates for Death by Cancer ",
+                         break.time.by = 1,
+                         palette = c("#333333"),
+                         conf.int = FALSE,
+                         censor = TRUE,
+                         legend.title="",
+                         legend.labs = c("All Patients"),
+                         risk.table = TRUE,
+                         risk.table.height = 0.2,
+                         tables.theme = theme_cleantable())
+
+stage_plot$plot <- stage_plot$plot +
+  theme(plot.title = element_text(hjust = 0.4), 
+        panel.grid.major.y = element_line(color = "#EAF2F3"), 
+        plot.background = element_rect(fill = "#EAF2F3"), 
+        axis.title.y = element_text(vjust = 1))
+
+stage_plot$plot
+```
+```{r echo=TRUE, fig.height=2, fig.width=8, message=FALSE, warning=FALSE}
+stage_plot$table <- stage_plot$table + theme(plot.title = element_text(hjust = -0.03, size = 14), plot.background = element_rect(fill = "#EAF2F3"), panel.background = element_rect(fill = "#EAF2F3"))
+
+stage_plot$table
+```
+
+# Survival Info
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+summary(survfit(Surv(date_of_death_and_start_date, Vital) ~ 1, data))
+
+summary(survfit(Surv(date_of_death_and_start_date, Vital) ~ 1, cause_specific_data))
+```
+
+

@@ -1,0 +1,101 @@
+---
+title: "Table 2: UVA and MVA Cox (All Patients)"
+author: "Jessica George and Shawna Tuli"
+date: "01/20/22"
+output: 
+  html_document:
+    toc: True
+    toc_depth: 2
+---
+
+# Libraries
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(finalfit)
+library(lubridate)
+library(survival)
+library(survMisc)
+
+source("../format_data.R")
+```
+
+
+# Data
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data <- read_csv("../../data/data.csv") %>% 
+  format_data(article_number = 1)
+```
+
+
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+# Optimal Cut-off Points
+# Cr -- optimal~86, median=60
+cutp(coxph(Surv(time_alive_path, vital_status) ~ cr_result, data=data))[]
+median(data$cr_result, na.rm=TRUE)
+
+# Hb -- request for 10, optimal~11.3, median=11.3
+cutp(coxph(Surv(time_alive_path, vital_status) ~ hb_result, data=data))[]
+median(data$hb_result, na.rm=TRUE)
+
+# ANC -- optimal ~3.57, median=3.9
+cutp(coxph(Surv(time_alive_path, vital_status) ~ neut_result, data=data))[]
+median(data$neut_result, na.rm=TRUE)
+
+# WBC -- optimal ~8.48, median=6.4
+cutp(coxph(Surv(time_alive_path, vital_status) ~ wbc_result, data=data))[]
+median(data$wbc_result, na.rm=TRUE)
+
+# Alb -- optimal ~36.7, median=39
+cutp(coxph(Surv(time_alive_path, vital_status) ~ alb_result, data=data))[]
+median(data$alb_result, na.rm=TRUE)
+```
+
+
+# Univariate Cox
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+dependent <- "Surv(time_alive_path, vital_status)"
+
+predictors <- c("enroll_age", "age_cat", "marital", "distance_factored2", "hiv_status", "cr_result", "cr_result_s100", "cr_opt", "cr_med", "hb_result", "hb_opt", "neut_result", "neut_result_s100", "neut_opt", "neut_med", "wbc_result", "wbc_result_s100", "wbc_opt", "wbc_med", "alb_result", "alb_result_s100", "alb_opt", "alb_med", "init_performance_status", "combined_cancer_stage_exact_factored")
+
+data %>%
+  finalfit(dependent, predictors) %>%
+  select("Dependent: Surv(time_alive_path, vital_status)", " ", "all", 
+         "HR (univariable)") %>% 
+  knitr::kable()
+```
+
+
+# Variance-Covariance Analysis
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+multivariate_all_predictors <- coxph(Surv(time_alive_path, vital_status) ~ age_cat + hiv_status + cr_opt + hb_opt + init_performance_status + combined_cancer_stage_exact_factored, data)
+
+## find variance-covariance
+vcov(multivariate_all_predictors)
+car::vif(multivariate_all_predictors)
+```
+
+
+# Multivariate Cox
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+dependent <- "Surv(time_alive_path, vital_status)"
+
+all_multivariate <- c("age_cat", "hiv_status", "cr_opt", "hb_opt", "neut_opt", "wbc_opt", "alb_opt", "init_performance_status", "combined_cancer_stage_exact_factored")
+# removing wbc, alb
+all_multivariate_reduced <- c("age_cat", "hiv_status", "hb_opt", "cr_opt", "neut_opt", "init_performance_status", "combined_cancer_stage_exact_factored")
+# removing anc
+all_multivariate_reduced2 <- c("age_cat", "hiv_status", "hb_opt", "cr_opt", "init_performance_status", "combined_cancer_stage_exact_factored")
+# removing cr
+all_multivariate_reduced3 <- c("age_cat", "hiv_status", "hb_opt", "combined_cancer_stage_exact_factored")
+# added cr back, removing KPS
+all_multivariate_reduced4 <- c("age_cat", "hiv_status", "hb_opt", "cr_opt", "combined_cancer_stage_exact_factored")
+# removing hb, cr, and KPS
+all_multivariate_reduced5 <- c("age_cat", "hiv_status", "combined_cancer_stage_exact_factored")
+
+data %>%
+  finalfit(dependent, all_multivariate_reduced5) %>%
+  select("Dependent: Surv(time_alive_path, vital_status)", " ", "all", 
+         "HR (multivariable)") %>% 
+  knitr::kable()
+
+AIC(coxph(Surv(time_alive_path, vital_status) ~ age_cat + hiv_status + combined_cancer_stage_exact_factored, data))
+```

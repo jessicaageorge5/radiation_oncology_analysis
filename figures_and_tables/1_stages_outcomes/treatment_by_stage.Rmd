@@ -1,0 +1,79 @@
+---
+title: "Article 1 Table 1 - Overall"
+author: "Jessica George and Shawna Tuli"
+date: "6/17/2021"
+output: html_document
+---
+
+# Libraries
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(Table1)
+library(lubridate)
+
+source("../format_data.R")
+```
+
+# Data
+```{r message=FALSE, warning=FALSE}
+all_patients <- read_csv("../../data/data.csv") %>% 
+  format_data(article_number = 1)
+```
+
+# Functions
+```{r}
+group_summary <- function(data, group_var){
+  return(data %>% group_by(!!group_var) %>% summarise(n()))
+}
+
+double_group_summary <- function(data, group_var1, group_var2){
+  return(data %>% group_by(!!group_var1, !!group_var2) %>% summarise(n()))
+}
+
+summary_stats <- function(data, var){
+  data %>% select(!!var) %>% summary()
+}
+```
+
+
+# Create Table 1 -- Only need treatment breakdown
+```{r}
+# treatment
+## surgery
+double_group_summary(all_patients, quo(combined_cancer_stage_exact_factored2), quo(surgery_only))
+## RT
+double_group_summary(all_patients,  quo(combined_cancer_stage_exact_factored2), quo(rt))
+## chemo
+double_group_summary(all_patients,  quo(combined_cancer_stage_exact_factored2), quo(chemo_only))
+## CRT
+double_group_summary(all_patients,  quo(combined_cancer_stage_exact_factored2), quo(crt))
+## surgery and RT
+double_group_summary(all_patients,  quo(combined_cancer_stage_exact_factored2), quo(primary_surgery_rt))
+## surgery and chemo
+double_group_summary(all_patients,  quo(combined_cancer_stage_exact_factored2), quo(primary_surgery_chemo))
+## surgery and crt
+double_group_summary(all_patients,  quo(combined_cancer_stage_exact_factored2), quo(primary_surgery_crt))
+## treatment y/n
+double_group_summary(all_patients,  quo(combined_cancer_stage_exact_factored2), quo(treatment))
+```
+
+# Create Table 1 -- Only need treatment breakdown
+```{r}
+# treatment
+## surgery
+double_group_summary(all_patients, quo(combined_cancer_stage_exact_factored3), quo(surgery_only))
+## RT
+double_group_summary(all_patients,  quo(combined_cancer_stage_exact_factored3), quo(rt))
+## chemo
+double_group_summary(all_patients,  quo(combined_cancer_stage_exact_factored3), quo(chemo_only))
+## CRT
+double_group_summary(all_patients,  quo(combined_cancer_stage_exact_factored3), quo(crt))
+## surgery and RT
+double_group_summary(all_patients,  quo(combined_cancer_stage_exact_factored3), quo(primary_surgery_rt))
+## surgery and chemo
+double_group_summary(all_patients,  quo(combined_cancer_stage_exact_factored3), quo(primary_surgery_chemo))
+## surgery and crt
+double_group_summary(all_patients,  quo(combined_cancer_stage_exact_factored3), quo(primary_surgery_crt))
+## treatment y/n
+double_group_summary(all_patients,  quo(combined_cancer_stage_exact_factored3), quo(treatment))
+```

@@ -1,0 +1,116 @@
+---
+title: "Table 1: Demographics (All Patients)"
+author: "Jessica George and Shawna Tuli"
+date: "01/20/22"
+output: 
+  html_document:
+    toc: True
+    toc_depth: 2
+---
+
+# Libraries
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(Table1)
+library(lubridate)
+
+source("../format_data.R")
+```
+
+
+# Data
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+all_patients <- read_csv("../../data/data.csv") %>% 
+  format_data(article_number = 1)
+```
+
+
+# Functions
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+group_summary <- function(data, group_var) {
+  return(data %>% 
+           group_by(!!group_var) %>% 
+           summarise(n())
+         )
+}
+
+summary_stats <- function(data, var) {
+  data %>% 
+    select(!!var) %>% 
+    summary()
+}
+```
+
+
+# Create Table 1
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# hiv status
+group_summary(all_patients, quo(hiv_status))
+
+# age
+summary_stats(all_patients, quo(enroll_age))
+group_summary(all_patients, quo(age_cat))
+
+# marital status
+group_summary(all_patients, quo(marital))
+
+# previously screened for cancer
+group_summary(all_patients, quo(cancer_screening))
+
+# distance from treatment facility
+group_summary(all_patients, quo(distance_factored))
+
+# disease stage
+group_summary(all_patients, quo(combined_cancer_stage_exact_factored2))
+
+# symptoms at presentation
+## vaginal bleeding
+group_summary(all_patients, quo(vaginal_hemorrhage))
+## vaginal discharge
+group_summary(all_patients, quo(vaginal_discharge))
+## pelvic pain
+group_summary(all_patients, quo(pelvic_pain))
+
+# baseline lab values
+## cr
+summary_stats(all_patients, quo(cr_result))
+## hb
+summary_stats(all_patients, quo(hb_result))
+## anc (neut)
+summary_stats(all_patients, quo(neut_result))
+## wbc
+summary_stats(all_patients, quo(wbc_result))
+## alb
+summary_stats(all_patients, quo(alb_result))
+
+# baseline performance status
+group_summary(all_patients, quo(init_performance_status))
+
+# hiv characteristics
+## CD4
+all_patients %>% filter(hiv_status == "HIV-infected") %>% select(cd4_final) %>% summary()
+## CD4 category
+all_patients %>% filter(hiv_status == "HIV-infected") %>% select(cd4_pos_cat2) %>% summary()
+## VL
+all_patients %>% filter(hiv_status == "HIV-infected") %>% select(vl_detect) %>% summary()
+## on ARV
+all_patients %>% filter(hiv_status == "HIV-infected") %>% select(on_arv) %>% summary()
+
+# treatment
+## surgery
+group_summary(all_patients, quo(surgery_only))
+## RT
+group_summary(all_patients, quo(rt))
+## chemo
+group_summary(all_patients, quo(chemo_only))
+## CRT
+group_summary(all_patients, quo(crt))
+## surgery and RT
+group_summary(all_patients, quo(primary_surgery_rt))
+## surgery and chemo
+group_summary(all_patients, quo(primary_surgery_chemo))
+## surgery and crt
+group_summary(all_patients, quo(primary_surgery_crt))
+## treatment y/n
+group_summary(all_patients, quo(treatment))
+```
