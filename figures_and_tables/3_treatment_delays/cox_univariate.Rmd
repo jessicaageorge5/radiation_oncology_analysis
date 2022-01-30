@@ -32,9 +32,7 @@ data <- original %>%
 
 # Univariate Results
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-run_univariate <- function(data, additional_predictors=c()) {
-  dependent <- "Surv(time_alive_treat, vital_status)"
-  
+run_univariate <- function(data, additional_predictors=c(), dependent="regular") {
   uni_predictors <- c("enroll_age", "age_cat", "marital", "distance_factored2", 
                       "init_performance_status", "hiv_status", "hiv_cd4_cat", "hiv_cd4_cat2", 
                       "cr_result", "cr_result_s100", "hb_result", "wbc_result", "wbc_result_s100", 
@@ -47,10 +45,25 @@ run_univariate <- function(data, additional_predictors=c()) {
   
   uni_predictors <- c(uni_predictors, additional_predictors)
   
-  data %>%
-    finalfit(dependent, uni_predictors) %>%
-    select("Dependent: Surv(time_alive_treat, vital_status)", " ", "all", "HR (univariable)") %>% 
-    knitr::kable()
+  if (dependent == "regular") {
+    dependent <- "Surv(time_alive_treat_mo, vital_status)"
+    
+    data %>%
+      finalfit(dependent, uni_predictors) %>%
+      select("Dependent: Surv(time_alive_treat_mo, vital_status)", " ", 
+             "all", "HR (univariable)") %>%
+      knitr::kable()
+  }
+  else {
+    dependent <- "Surv(time_alive_treat_mo24, vital_status24)"
+    
+    data %>%
+      finalfit(dependent, uni_predictors) %>%
+      select("Dependent: Surv(time_alive_treat_mo24, vital_status24)", " ", 
+             "all", "HR (univariable)") %>%
+      knitr::kable()
+  }
+  
 }
 ```
 
@@ -117,4 +130,14 @@ data %>%
 data %>% 
   filter(path_treatment_180 == ">=180") %>% 
   run_univariate()
+```
+
+
+# Overall Survival at 24 months
+## All Patients
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data %>% run_univariate(c("path_treatment_30", "path_treatment_60", 
+                          "path_treatment_90", "path_treatment_120", 
+                          "path_treatment_150", "path_treatment_180"),
+                        "24")
 ```

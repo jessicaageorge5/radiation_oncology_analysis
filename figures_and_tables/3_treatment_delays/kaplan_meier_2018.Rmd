@@ -237,6 +237,45 @@ print(obj)
 ```
 
 
+## 6) Survival status at 24 months by Delay (90 days)
+```{r echo=TRUE, fig.width=8, message=FALSE, warning=FALSE}
+delay90_survival24 <- survfit(Surv(time_alive_treat_mo24, vital_status24) ~ path_treatment_90, data_2018)
+
+delay90_surv24plot <- ggsurvplot(fit = delay90_survival24,
+                                 data_2018,
+                                 xlab = "Months since OS24",
+                                 xlim = c(0, 24),
+                                 ylab = "Proportion surviving",
+                                 title = "Kaplan-Meier Survival Estimates by Delay (90 days)",
+                                 break.time.by = 3,
+                                 palette = c("#56B4E9", "#0072B2"),
+                                 conf.int = FALSE,
+                                 censor = TRUE,
+                                 legend.title="",
+                                 legend.labs = c("Delay <90 days", "Delay ≥90 days"),
+                                 #legend.labs = c("No Delay", "Delay or Untreated"),
+                                 risk.table = TRUE,
+                                 risk.table.height = 0.2,
+                                 tables.theme = theme_cleantable())
+
+delay90_surv24plot$plot <- delay90_surv24plot$plot +
+  theme(plot.title = element_text(hjust = 0.4), 
+        panel.grid.major.y = element_line(color = "#EAF2F3"), 
+        plot.background = element_rect(fill = "#EAF2F3"), 
+        axis.title.y = element_text(vjust = 1))
+
+delay90_surv24plot$plot
+```
+```{r echo=TRUE, fig.height=2, fig.width=8, message=FALSE, warning=FALSE}
+delay90_surv24plot$table <- delay90_surv24plot$table + 
+  theme(plot.title = element_text(hjust = -0.24, size = 14), 
+        plot.background = element_rect(fill = "#EAF2F3"), 
+        panel.background = element_rect(fill = "#EAF2F3"))
+
+delay90_surv24plot$table
+```
+
+
 ## 6a) Survival status by Delay (90 days) and Stage
 ```{r echo=TRUE, fig.width=8, message=FALSE, warning=FALSE}
 delay90_stage_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90 + combined_cancer_stage2, data_2018)

@@ -457,6 +457,7 @@ format_data <- function(clean_data, article_number) {
         time_alive_path_mo = time_alive_path/30.417,
         time_alive_treat_yr = time_alive_treat/365,
         time_alive_treat_mo = time_alive_treat/30.417,
+        time_alive_treat_mo24 = time_alive_treat24/30.417,
         curative_palliative = relevel(factor(curative_palliative_status), ref="Definitive"))
   }
 
