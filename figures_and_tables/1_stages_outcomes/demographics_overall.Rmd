@@ -74,14 +74,19 @@ group_summary(all_patients, quo(pelvic_pain))
 # baseline lab values
 ## cr
 summary_stats(all_patients, quo(cr_result))
+group_summary(all_patients, quo(cr_opt))
 ## hb
 summary_stats(all_patients, quo(hb_result))
+group_summary(all_patients, quo(hb_opt))
 ## anc (neut)
 summary_stats(all_patients, quo(neut_result))
+group_summary(all_patients, quo(neut_opt))
 ## wbc
 summary_stats(all_patients, quo(wbc_result))
+group_summary(all_patients, quo(wbc_opt))
 ## alb
 summary_stats(all_patients, quo(alb_result))
+group_summary(all_patients, quo(alb_opt))
 
 # baseline performance status
 group_summary(all_patients, quo(init_performance_status))

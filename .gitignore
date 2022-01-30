@@ -137,7 +137,9 @@ rohini_project/
 surbhi_request_52521/
 surbhi_request_111321/
 data/
-.DS_Store
-**/DS_Store
 .ipynb_checkpoints/
 **/.ipynb_checkpoints/
+.DS_Store
+._.DS_Store
+**/.DS_Store
+**/._.DS_Store

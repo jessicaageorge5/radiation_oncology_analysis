@@ -274,7 +274,7 @@ format_data <- function(clean_data, article_number) {
   else if (article_number == 3) {
     formatted_data <- clean_data %>% 
       # Filter out patients without treatment start date (87) and patients who have negative time to treatment
-      filter(!is.na(actual_treat_start_date) & path_to_treatment_difference >= 0) %>% 
+      # filter(!is.na(actual_treat_start_date) & path_to_treatment_difference >= 0) %>% 
       mutate(   
         age_cat = factor(age_cat, levels = c(1, 2, 3), labels = c("21-39", "40-59", ">60")),
         hiv_status = relevel(factor(hiv_status, 
@@ -404,6 +404,7 @@ format_data <- function(clean_data, article_number) {
         path_treatment_90 = relevel(factor(ifelse(path_to_treatment_difference < 90, 0, 1), 
                                             levels = c(0,1), labels=c("<90 days", "≥90 days")),
                                      ref="<90 days"),
+        path_treatment_90_ = factor(ifelse(path_to_treatment_difference < 90, 0, 1)),
         path_treatment_120 = relevel(factor(ifelse(path_to_treatment_difference < 120, 0, 1), 
                                             levels = c(0,1), labels=c("<120", ">=120")),
                                      ref="<120"),
@@ -417,9 +418,13 @@ format_data <- function(clean_data, article_number) {
                                                 path_to_treatment_difference >= 60 & path_to_treatment_difference < 90 ~ 2,
                                                 path_to_treatment_difference >= 90 & path_to_treatment_difference < 120 ~ 3,
                                                 path_to_treatment_difference >= 120 ~ 4), levels=c(1,2,3,4), labels=c("<60", "60-<90", "90-<120", ">=120")),
+        delay = relevel(factor(case_when(path_to_treatment_difference < 180 ~ 0,
+                                         treatment == 0 ~ 1,
+                                         path_to_treatment_difference >= 180 ~ 1), levels=c(0,1), labels=c("No Delay", "Delay or Untreated")), ref="No Delay"),
         pathology_year = year(ymd(pathology_date)),
         vl_detect = factor(case_when(vl_final < 400 ~ 0,
                                      vl_final >= 400 ~ 1), levels = c(0, 1), labels = c("Undetectable", "Detectable")),
+        pathology_year = year(ymd(pathology_date)),
         pathology_group = factor(case_when(pathology_year < 2016 ~ 2015,
                                            pathology_year == 2016 ~ 2016,
                                            pathology_year == 2017 ~ 2017,
@@ -446,9 +451,13 @@ format_data <- function(clean_data, article_number) {
         primary_surgery_chemo = factor(primary_surgery_chemo, level = c(0,1), labels = c("No", "Yes")),
         primary_surgery_rt = factor(primary_surgery_rt, level = c(0,1), labels = c("No", "Yes")),
         primary_surgery_crt = factor(primary_surgery_crt, level = c(0,1), labels = c("No", "Yes")),
-        time_alive_path = time_alive_path/365,
+        treatment_type = factor(case_when(rt == "Yes" ~ 0,
+                                          crt == "Yes" ~ 1), levels=c(0,1), labels=c("RT", "CRT")),
+        time_alive_path_yr = time_alive_path/365,
+        time_alive_path_mo = time_alive_path/30.417,
         time_alive_treat_yr = time_alive_treat/365,
-        time_alive_treat_mo = time_alive_treat/30.417)
+        time_alive_treat_mo = time_alive_treat/30.417,
+        curative_palliative = relevel(factor(curative_palliative_status), ref="Definitive"))
   }
 
   else {

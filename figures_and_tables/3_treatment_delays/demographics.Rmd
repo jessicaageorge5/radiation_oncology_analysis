@@ -1,14 +1,15 @@
 ---
 title: "Table 1 - Demographics"
 author: "Jessica George"
-date: "1/18/2022"
+date: "1/18/22"
 output:
-  html_document: default
-  pdf_document: default
+  html_document:
+    toc: True
+    toc_depth: 2
 ---
 
 # Libraries
-```{r message=FALSE, warning=FALSE, include=FALSE}
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(readxl)
 library(survival)
@@ -20,26 +21,37 @@ library(survMisc)
 source("../format_data.R")
 ```
 
-```{r message=FALSE, warning=FALSE, include=FALSE}
-# load data
+
+# Data
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 data <- read_excel("../../data/time_to_treatment_data.xlsx") %>% 
   format_data(article_number = 3)
 ```
 
-```{r eval=FALSE, include=FALSE}
+
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+# optimal cut points for delays
 cutp(coxph(Surv(time_alive_treat, vital_status) ~ path_to_treatment_difference, data=data))[]
 
 cutp(coxph(Surv(time_alive_treat, vital_status) ~ path_to_treatment_difference + combined_cancer_stage_exact_factored2, data=data))[]
 ```
 
+
 # Table 1
-```{r echo=FALSE}
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 # Skipping HIV+ only variables: cd4_final, hiv_cd4_cat, hiv_cd4_cat2, on_arv, vl_detect... See below for calculations for these variables
 
-quick.table(data[,c("enroll_age", "age_cat", "marital", "cancer_screening", "distance_factored2", "combined_cancer_stage", "cr_result", "hb_result", "neut_result", "wbc_result", "alb_result", "init_performance_status", "hiv_status", "surgery_only", "rt", "chemo_only", "crt", "primary_surgery_chemo", "primary_surgery_rt", "primary_surgery_crt", "path_treatment_30", "path_treatment_60", "path_treatment_84", "path_treatment_90", "path_treatment_120", "path_treatment_150", "path_treatment_180")])
+quick.table(data[, c("enroll_age", "age_cat", "marital", "cancer_screening", "distance_factored2",
+                     "combined_cancer_stage", "cr_result", "hb_result", "neut_result", 
+                     "wbc_result", "alb_result", "init_performance_status", "hiv_status", 
+                     "surgery_only", "rt", "chemo_only", "crt", "primary_surgery_chemo", 
+                     "primary_surgery_rt", "primary_surgery_crt", "path_treatment_30", 
+                     "path_treatment_60", "path_treatment_84", "path_treatment_90", 
+                     "path_treatment_120", "path_treatment_150", "path_treatment_180")])
 ```
 
-```{r echo=TRUE}
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 # cd4_final
 # median
 sapply(select(filter(data, hiv_status == "HIV-infected"), cd4_final), median, na.rm = T)
