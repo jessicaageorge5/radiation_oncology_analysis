@@ -34,10 +34,10 @@ data <- data %>%
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 dependent <- "Surv(time_alive_path, vital_status)"
 
-predictors <- c("enroll_age", "age_cat", "marital", "distance_factored2", "hiv_status", "cr_opt",  "cr_result_s100", "hb_opt", "hb_result", "neut_opt", "neut_result_s100", "wbc_opt", "wbc_result_s100", "alb_opt", "alb_result_s100", "init_performance_status", "combined_cancer_stage_exact_factored", "treat_response", "eqd2_79", "total_chemo_received_4", "total_chemo_received_cat")
+predictors <- c("enroll_age", "age_cat", "marital", "distance_factored2", "hiv_status", "cr_result", "cr_opt",  "cr_result_s100", "hb_opt", "hb_result", "neut_opt", "neut_result_s100", "neut_result", "wbc_opt", "wbc_result_s100", "wbc_result", "alb_opt", "alb_result_s100", "alb_result", "init_performance_status", "combined_cancer_stage_exact_factored", "treat_response", "eqd2_79", "total_chemo_received_4", "total_chemo_received_cat", "cancer_screening")
 
 data %>%
-  finalfit(dependent, predictors) %>%
+  finalfit(dependent, predictors, digits=c(3,3,4)) %>%
   select("Dependent: Surv(time_alive_path, vital_status)", " ", "all", "HR (univariable)") %>% 
   knitr::kable()
 ```
@@ -47,10 +47,10 @@ data %>%
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 dependent <- "Surv(time_alive_path, vital_status)"
 
-all_multivariate <- c("age_cat", "hiv_status", "hb_opt", "cr_opt", "init_performance_status", "combined_cancer_stage_exact_factored", "treat_response", "eqd2_79", "total_chemo_received_4")
+all_multivariate <- c("age_cat", "hiv_status", "hb_opt", "cr_result", "init_performance_status", "combined_cancer_stage_exact_factored", "treat_response", "eqd2_79", "total_chemo_received_4")
 
 data %>%
-  finalfit(dependent, all_multivariate) %>%
+  finalfit(dependent, all_multivariate, digits=c(3,3,5)) %>%
   select("Dependent: Surv(time_alive_path, vital_status)", " ", "all", "HR (multivariable)") %>% 
   knitr::kable()
 

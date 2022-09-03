@@ -1,0 +1,78 @@
+---
+title: "Table 2- UVA and MVA Cox All Patients"
+author: "Jessica George and Shawna Tuli"
+date: "01/20/22"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+  html_document:
+    toc: yes
+    toc_depth: 2
+---
+
+# Libraries
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(finalfit)
+library(lubridate)
+library(survival)
+library(survMisc)
+
+source("../format_data.R")
+```
+
+
+# Data
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data <- read_csv("../../data/data.csv") %>% 
+  format_data(article_number = 1)
+```
+
+
+# Multivariate Cox - Continuous Hb, Cr
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+dependent <- "Surv(time_alive_path, vital_status)"
+
+all_multivariate_cont <- c("age_cat", "hiv_status", "hb_result", "cr_result", "init_performance_status", "combined_cancer_stage_exact_factored")
+
+data %>%
+  finalfit(dependent, all_multivariate_cont) %>%
+  select("Dependent: Surv(time_alive_path, vital_status)", " ", "all", 
+         "HR (multivariable)") %>% 
+  knitr::kable()
+
+AIC(coxph(Surv(time_alive_path, vital_status) ~ age_cat + hiv_status + hb_result + cr_result + init_performance_status + combined_cancer_stage_exact_factored, data))
+```
+
+# Multivariate Cox - Categorical Hb, Continuous Cr
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+dependent <- "Surv(time_alive_path, vital_status)"
+
+
+all_multivariate_cat <- c("age_cat", "hiv_status", "hb_opt", "cr_result", "init_performance_status", "combined_cancer_stage_exact_factored")
+
+data %>%
+  finalfit(dependent, all_multivariate_cat) %>%
+  select("Dependent: Surv(time_alive_path, vital_status)", " ", "all", 
+         "HR (multivariable)") %>% 
+  knitr::kable()
+
+AIC(coxph(Surv(time_alive_path, vital_status) ~ age_cat + hiv_status + hb_opt + cr_result + init_performance_status + combined_cancer_stage_exact_factored, data))
+```
+
+# Multivariate Cox - Categorical Hb, Cr
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+dependent <- "Surv(time_alive_path, vital_status)"
+
+
+all_multivariate_cat <- c("age_cat", "hiv_status", "hb_opt", "cr_opt", "init_performance_status", "combined_cancer_stage_exact_factored")
+
+data %>%
+  finalfit(dependent, all_multivariate_cat) %>%
+  select("Dependent: Surv(time_alive_path, vital_status)", " ", "all", 
+         "HR (multivariable)") %>% 
+  knitr::kable()
+
+AIC(coxph(Surv(time_alive_path, vital_status) ~ age_cat + hiv_status + hb_opt + cr_opt + init_performance_status + combined_cancer_stage_exact_factored, data))
+```

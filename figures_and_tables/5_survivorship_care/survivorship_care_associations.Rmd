@@ -1,0 +1,104 @@
+---
+title: "Associations with Survivorship Care"
+author: "Jessica George"
+date: '2022-08-21'
+output: html_document
+---
+
+# Libraries
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(readxl)
+library(survival)
+library(lubridate)
+library(gtsummary)
+
+source("format_data.R")
+```
+
+
+# Data
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data <- read_csv("../../data/survivorship_care/analysis_data.csv") %>% 
+  format_data()
+
+data %>% head()
+
+uni_predictors <- c("age", "age_cat", "marital_status", "cancer_screening", "hiv_status", "baseline_kps_90", "baseline_cr", "baseline_hb", "baseline_hb_10", "baseline_alb", "baseline_wbc", "baseline_anc", "stage_eot", "condensed_stage_eot", "trt_type", "any_chemo", "chemo_4", "trt_response", "eqd2", "eqd2_75")
+```
+
+# Associations with 2-year survivorship
+## Univariable
+```{r}
+analysis_group1 <- data %>% 
+  filter(analysis1 == 1)
+
+tbl_uvregression(data=analysis_group1[c(c("criteria_1"), uni_predictors)],
+                 method = glm, 
+                 y = criteria_1,
+                 method.args=list(family=binomial),
+                 include = uni_predictors,
+                 hide_n = 2,
+                 exponentiate = TRUE,
+                 estimate_fun = function(x) style_ratio(x, digits = 3),
+                 pvalue_fun = function(x) style_pvalue(x, digits = 3)
+                ) %>% 
+  bold_p(t = 0.05)
+```
+## Multivariable
+```{r}
+multi_mod1 <- glm(criteria_1 ~ age_cat + hiv_status + condensed_stage_eot + chemo_4 + eqd2_75, data=analysis_group1, family=binomial())
+
+AIC(multi_mod1)
+
+multi_mod2 <- glm(criteria_1 ~ age_cat + hiv_status + condensed_stage_eot + trt_type, data=analysis_group1, family=binomial())
+
+AIC(multi_mod2)
+
+multi_mod1 %>% 
+  tbl_regression(exponentiate = TRUE) %>% 
+  bold_p(t = 0.05)
+
+multi_mod2 %>% 
+  tbl_regression(exponentiate = TRUE) %>% 
+  bold_p(t = 0.05)
+```
+
+# Associations with 3-5 year survivorship
+## Univariable
+```{r}
+analysis_group2 <- data %>% 
+  filter(analysis2 == 1)
+
+tbl_uvregression(data=analysis_group2[c(c("criteria_2"), uni_predictors)],
+                 method = glm, 
+                 y = criteria_2,
+                 method.args=list(family=binomial),
+                 include = uni_predictors,
+                 hide_n = 2,
+                 exponentiate = TRUE,
+                 estimate_fun = function(x) style_ratio(x, digits = 3),
+                 pvalue_fun = function(x) style_pvalue(x, digits = 3)
+                ) %>% 
+  bold_p(t = 0.05)
+```
+## Multivariable
+```{r}
+multi_mod1 <- glm(criteria_2 ~ age_cat + hiv_status + condensed_stage_eot + chemo_4 + eqd2_75, data=analysis_group2, family=binomial())
+
+AIC(multi_mod1)
+
+multi_mod2 <- glm(criteria_2 ~ age_cat + hiv_status + condensed_stage_eot + trt_type, data=analysis_group2, family=binomial())
+
+AIC(multi_mod2)
+
+multi_mod1 %>% 
+  tbl_regression(exponentiate = TRUE) %>% 
+  bold_p(t = 0.05)
+
+multi_mod2 %>% 
+  tbl_regression(exponentiate = TRUE) %>% 
+  bold_p(t = 0.05)
+```
+
+

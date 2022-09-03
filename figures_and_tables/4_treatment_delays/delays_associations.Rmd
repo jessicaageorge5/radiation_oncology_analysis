@@ -1,5 +1,5 @@
 ---
-title: "Table 2: Binomial Logistic Regression (90 days)"
+title: "Table 2: Delays (90 days) Associations - Binomial Logistic Regression"
 author: "Jessica George"
 date: "01/29/22"
 output:
@@ -48,7 +48,8 @@ uni_predictors <- c("enroll_age", "age_cat", "marital", "distance_factored2",
                     "init_performance_status", "hiv_status", "hiv_cd4_cat", "hiv_cd4_cat2", 
                     "cr_result", "cr_result_s100", "hb_result", "wbc_result", "wbc_result_s100", 
                     "neut_result", "neut_result_s100", "alb_result", "alb_result_s100", 
-                    "combined_cancer_stage", "combined_cancer_stage2", "combined_cancer_stage3", 
+                    "init_combined_cancer_stage", "init_combined_cancer_stage2", "init_combined_cancer_stage3", 
+                    "final_combined_cancer_stage", "final_combined_cancer_stage2", "final_combined_cancer_stage3",
                     "total_chemo_received_cat", "total_chemo_received_4", "chemo", "eqd2", 
                     "eqd2_75", "eqd2_79", "eqd2_80", "pathology_group", "pathology_group2", 
                     "pathology_group3", "cancer_screening", "treat_response", "hiv_cd4_cat", 
@@ -65,7 +66,10 @@ tbl_uvregression(data=data[c(c("path_treatment_30"), uni_predictors)],
                  method.args=list(family=binomial),
                  include = uni_predictors,
                  hide_n = 2,
-                 exponentiate = TRUE)
+                 exponentiate = TRUE,
+                 estimate_fun = function(x) style_ratio(x, digits = 3),
+                 pvalue_fun = function(x) style_pvalue(x, digits = 3)
+                )
 ```
 
 
@@ -77,7 +81,10 @@ tbl_uvregression(data=data[c(c("path_treatment_60"), uni_predictors)],
                  method.args=list(family=binomial),
                  include = uni_predictors,
                  hide_n = 2,
-                 exponentiate = TRUE)
+                 exponentiate = TRUE,
+                 estimate_fun = function(x) style_ratio(x, digits = 3),
+                 pvalue_fun = function(x) style_pvalue(x, digits = 3)
+                )
 ```
 
 
@@ -89,7 +96,10 @@ tbl_uvregression(data=data[c(c("path_treatment_90"), uni_predictors)],
                  method.args=list(family=binomial),
                  include = uni_predictors,
                  hide_n = 2,
-                 exponentiate = TRUE)
+                 exponentiate = TRUE,
+                 estimate_fun = function(x) style_ratio(x, digits = 3),
+                 pvalue_fun = function(x) style_pvalue(x, digits = 3)
+                )
 ```
 
 
@@ -101,7 +111,10 @@ tbl_uvregression(data=data[c(c("path_treatment_120"), uni_predictors)],
                  method.args=list(family=binomial),
                  include = uni_predictors,
                  hide_n = 2,
-                 exponentiate = TRUE)
+                 exponentiate = TRUE,
+                 estimate_fun = function(x) style_ratio(x, digits = 3),
+                 pvalue_fun = function(x) style_pvalue(x, digits = 3)
+                )
 ```
 
 
@@ -113,7 +126,10 @@ tbl_uvregression(data=data[c(c("path_treatment_150"), uni_predictors)],
                  method.args=list(family=binomial),
                  include = uni_predictors,
                  hide_n = 2,
-                 exponentiate = TRUE)
+                 exponentiate = TRUE,
+                 estimate_fun = function(x) style_ratio(x, digits = 3),
+                 pvalue_fun = function(x) style_pvalue(x, digits = 3)
+                )
 ```
 
 
@@ -125,5 +141,19 @@ tbl_uvregression(data=data[c(c("path_treatment_180"), uni_predictors)],
                  method.args=list(family=binomial),
                  include = uni_predictors,
                  hide_n = 2,
-                 exponentiate = TRUE)
+                 exponentiate = TRUE,
+                 estimate_fun = function(x) style_ratio(x, digits = 3),
+                 pvalue_fun = function(x) style_pvalue(x, digits = 3)
+                )
 ```
+
+
+# Multivariate Model
+```{r}
+multi_mod <- glm(path_treatment_90 ~ age_cat + distance_factored2 + hiv_status + final_combined_cancer_stage2 + pathology_group2, data=data, family=binomial())
+
+multi_mod %>% 
+  tbl_regression(exponentiate = TRUE) %>% 
+  bold_p(t = 0.05)
+```
+

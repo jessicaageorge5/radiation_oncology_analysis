@@ -55,10 +55,10 @@ median(data$alb_result, na.rm=TRUE)
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 dependent <- "Surv(time_alive_path, vital_status)"
 
-predictors <- c("enroll_age", "age_cat", "marital", "distance_factored2", "hiv_status", "cr_result", "cr_result_s100", "cr_opt", "cr_med", "hb_result", "hb_opt", "neut_result", "neut_result_s100", "neut_opt", "neut_med", "wbc_result", "wbc_result_s100", "wbc_opt", "wbc_med", "alb_result", "alb_result_s100", "alb_opt", "alb_med", "init_performance_status", "combined_cancer_stage_exact_factored")
+predictors <- c("enroll_age", "age_cat", "marital", "distance_factored2", "hiv_status", "cr_result", "cr_result_s100", "cr_opt", "cr_med", "hb_result", "hb_opt", "neut_result", "neut_result_s100", "neut_opt", "neut_med", "wbc_result", "wbc_result_s100", "wbc_opt", "wbc_med", "alb_result", "alb_result_s100", "alb_opt", "alb_med", "init_performance_status", "combined_cancer_stage_exact_factored", "cancer_screening")
 
 data %>%
-  finalfit(dependent, predictors) %>%
+  finalfit(dependent, predictors, digits = c(3,3,4)) %>%
   select("Dependent: Surv(time_alive_path, vital_status)", " ", "all", 
          "HR (univariable)") %>% 
   knitr::kable()
@@ -90,12 +90,14 @@ all_multivariate_reduced3 <- c("age_cat", "hiv_status", "hb_opt", "combined_canc
 all_multivariate_reduced4 <- c("age_cat", "hiv_status", "hb_opt", "cr_opt", "combined_cancer_stage_exact_factored")
 # removing hb, cr, and KPS
 all_multivariate_reduced5 <- c("age_cat", "hiv_status", "combined_cancer_stage_exact_factored")
+## finalized 
+all_multivariate_final <- c("age_cat", "hiv_status", "hb_opt", "cr_result", "combined_cancer_stage_exact_factored", "init_performance_status")
 
 data %>%
-  finalfit(dependent, all_multivariate_reduced5) %>%
+  finalfit(dependent, all_multivariate_final, digits = c(3,3,4)) %>%
   select("Dependent: Surv(time_alive_path, vital_status)", " ", "all", 
          "HR (multivariable)") %>% 
   knitr::kable()
 
-AIC(coxph(Surv(time_alive_path, vital_status) ~ age_cat + hiv_status + combined_cancer_stage_exact_factored, data))
+AIC(coxph(Surv(time_alive_path, vital_status) ~ age_cat + hiv_status + hb_opt + cr_result + combined_cancer_stage_exact_factored + init_performance_status, data))
 ```

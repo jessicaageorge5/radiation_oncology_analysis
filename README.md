@@ -7,31 +7,31 @@ Associated with:
 
 Data sourced from Penn Medicine Radiation Oncology REDCap
 
+# Abstracts (2020-2021)
 
-# Stage and outcomes of invasive cervical cancer patients with or without HIV in Botswana: A prospective cohort study from 2019-2020
-What are the stage and outcomes of cervival cancer with or without HIV infection in Botswana 2013-2020? 
-
-"Stage and outcomes of cervical cancer with or without HIV infection in Botswana 2013-2020"
+## Stage and outcomes of invasive cervical cancer patients with or without HIV in Botswana: A prospective cohort study from 2013-2020
+To present the stage and outcomes of patients with invasive cervical cancer with all stages in Botswana with or without HIV, and to prospectively evaluate factors associated with survival in this population.
 
 source: /figures_and_tables/1_stage_outcomes
 
-# Treatment toxicities of cervical cancer with or without HIV infection in Botswana 2013-2020
-What are the treatment toxicities of cervical cancer with or without HIV infection in Botswana 2013-2020?
-
-"Treatment toxicities of cervical cancer with or without HIV infection in Botswana 2013-2020"
+## Treatment toxicities of cervical cancer with or without HIV infection in Botswana 2013-2020
+To examine factors associated with treatment toxicities for cervical cancer patients, with/without HIV infection, who initiated radiation therapy (RT) or chemoradiation therapy (CRT) in a limited-resource setting. 
 
 source: /figures_and_tables/2_treatment_toxicities
 
-# Treatment delays of cervical cancer with or without HIV infection in Botswana 2013-2020
-What are the treatment delays of cervical cancer with or without HIV infection in Botswana 2013-2020?
+## Role for neoadjuvant chemotherapy and less invasive surgery in management of early stage cervical cancer in Botswana
+We present our outcomes from treating patients with stage IA2-IB1 cervical cancer with neoadjuvant chemotherapy (NACT) followed by a simple hysterectomy and LND in absence of a gynecological oncologist.
 
-"Treatment delays of cervical cancer with or without human immunodeficiency virus infection in Botswana 2013-2020"
+source: /figures_and_tables/3_neoadjuvant_chemo
 
-source: /figures_and_tables/3_treatment_delays
+# Abstracts (2021-2022)
 
-# Role for neoadjuvant chemotherapy and less invasive surgery in management of early stage cervical cancer in Botswana
-What is the role for Neoadjuvant chemotherapy and less invasive surgery in management of early stage cervical cancer in Botswana?
+## Delays in cervical cancer treatment initiation for patients living with or without HIV in Botswana 2013-2019
+To present delays in treatment initiation of curative intent chemoradiation (CRT) for patients with advanced and locally advanced stage cervical cancer (CC) and living with or without human immunodeficiency virus (HIV).
 
-"Role for Neoadjuvant chemotherapy and less invasive surgery in management of early stage cervical cancer in Botswana"
+source: /figures_and_tables/4_treatment_delays
 
-source: /figures_and_tables/4_neoadjuvant_chemo
+## Patterns of survivorship care of cervical cancer patients with or without HIV infection in Botswana 2015-2022
+To present patterns of survivorship care of cervical cancer (CC) patients treated with radiation therapy (RT) in Botswana with or without human immunodeficiency virus (HIV), and to prospectively evaluate factors associated with retention in survivorship care in this population.
+
+source: /figures_and_tables/5_survivorship_care

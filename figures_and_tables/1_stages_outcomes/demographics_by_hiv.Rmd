@@ -11,7 +11,8 @@ output:
 # Libraries
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
-library(Table1)
+# library(Table1)
+library(gtsummary)
 library(lubridate)
 
 source("../format_data.R")
@@ -29,32 +30,30 @@ all_patients <- read_csv("../../data/data.csv") %>%
 ```{r}
 # Skipping HIV-related variables: cd4_final, cd4_pos_cat, cd4_pos_cat2, on_arv, vl_detect... See below for calculations for these variables
 
-make.table(dat = all_patients,
-           strat = "hiv_status",
-           colnames = c("Characteristic", "HIV-infected", 
-                        "HIV-uninfected", "Overall", "P"),
-           cat.varlist = c("age_cat", "marital", "cancer_screening",
-                           "distance_factored2", 
-                           "combined_cancer_stage_exact_factored2", 
-                           "vaginal_hemorrhage_symp", "vaginal_discharge_symp", 
-                           "pelvic_pain_symp", "init_performance_status", 
-                           "treat_response", "surgery_only", "rt", "chemo_only", 
-                           "crt", "primary_surgery_chemo", "primary_surgery_rt", 
-                           "primary_surgery_crt", "treatment", "cr_opt", "hb_opt", "neut_opt", 
-                           "wbc_opt", "alb_opt"),
-           cat.rmstat = list(c("row"), c("miss")),
-           cat.ptype = "chisq",
-           cont.varlist = c("enroll_age", "cr_result", "hb_result", 
-                            "neut_result", "wbc_result", "alb_result"),
-           cont.ptype = "ttest",
-           cont.rmstat = list(c("", "meansd", ""), c("q1q3")),
-           caption = "Table 1",
-           footer = "IB1 includes patients who have received chemoradiation therapy, excluding those who have received surgery.<br><i>Abbreviations:</i> ANC = absolute neutrophil count; ARV = antiretroviral; KPS = Karofsky performance score; WBC = white blood cells.<br>Values are presented as number (percentage), unless otherwise noted.",
-           tspanner     = c("",""),
-           n.tspanner   = c(99.5, 99.5),
-           cgroup       = c("", "Results by HIV Status", ""),
-           n.cgroup     = c(1, 3, 1),
-           output = "html")
+
+all_patients %>% 
+  select("hiv_status", "age_cat", "marital", "cancer_screening", "distance_factored2", "combined_cancer_stage_exact_factored2", "vaginal_hemorrhage_symp", "vaginal_discharge_symp", "pelvic_pain_symp", "init_performance_status", "treat_response", "surgery_only", "rt", "chemo_only",  "crt", "primary_surgery_chemo", "primary_surgery_rt", "primary_surgery_crt", "treatment", "cr_opt", "hb_opt", "neut_opt",  "wbc_opt", "alb_opt", "enroll_age", "cr_result", "hb_result", "neut_result", "wbc_result", "alb_result") %>% 
+  tbl_summary(
+    by = hiv_status,
+    missing = "no"
+  ) %>% 
+  add_n() %>% 
+  add_p(pvalue_fun = ~style_sigfig(., digits = 4))
+
+# Cr
+all_patients %>% 
+  group_by(hiv_status) %>% 
+  summarise(quantile(cr_result, 0.25, na.rm=TRUE), quantile(cr_result, 0.75, na.rm=TRUE))
+
+# ANC
+all_patients %>% 
+  group_by(hiv_status) %>% 
+  summarise(quantile(neut_result, 0.25, na.rm=TRUE), quantile(neut_result, 0.75, na.rm=TRUE))
+
+# Alb
+all_patients %>% 
+  group_by(hiv_status) %>% 
+  summarise(quantile(alb_result, 0.25, na.rm=TRUE), quantile(alb_result, 0.75, na.rm=TRUE))
 
 # cd4_final
 # median

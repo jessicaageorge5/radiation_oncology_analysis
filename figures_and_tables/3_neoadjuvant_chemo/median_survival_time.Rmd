@@ -6,6 +6,8 @@ output:
   html_document:
     toc: True
     toc_depth: 2
+editor_options: 
+  chunk_output_type: inline
 ---
 
 # Libraries

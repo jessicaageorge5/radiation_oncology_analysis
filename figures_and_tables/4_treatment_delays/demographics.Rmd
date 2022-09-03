@@ -33,7 +33,9 @@ data <- read_excel("../../data/time_to_treatment_data.xlsx") %>%
 # optimal cut points for delays
 cutp(coxph(Surv(time_alive_treat, vital_status) ~ path_to_treatment_difference, data=data))[]
 
-cutp(coxph(Surv(time_alive_treat, vital_status) ~ path_to_treatment_difference + combined_cancer_stage_exact_factored2, data=data))[]
+cutp(coxph(Surv(time_alive_treat, vital_status) ~ path_to_treatment_difference + init_combined_cancer_stage, data=data))[]
+
+cutp(coxph(Surv(time_alive_treat, vital_status) ~ path_to_treatment_difference + final_combined_cancer_stage, data=data))[]
 ```
 
 
@@ -42,7 +44,7 @@ cutp(coxph(Surv(time_alive_treat, vital_status) ~ path_to_treatment_difference +
 # Skipping HIV+ only variables: cd4_final, hiv_cd4_cat, hiv_cd4_cat2, on_arv, vl_detect... See below for calculations for these variables
 
 quick.table(data[, c("enroll_age", "age_cat", "marital", "cancer_screening", "distance_factored2",
-                     "combined_cancer_stage", "cr_result", "hb_result", "neut_result", 
+                     "init_combined_cancer_stage", "final_combined_cancer_stage", "cr_result", "hb_result", "neut_result", 
                      "wbc_result", "alb_result", "init_performance_status", "hiv_status", 
                      "surgery_only", "rt", "chemo_only", "crt", "primary_surgery_chemo", 
                      "primary_surgery_rt", "primary_surgery_crt", "path_treatment_30", 

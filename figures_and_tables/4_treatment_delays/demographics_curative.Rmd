@@ -1,0 +1,90 @@
+---
+title: "Table 1 - Demographics (Curative Group)"
+author: "Jessica George"
+date: "4/3/22"
+output:
+  html_document:
+    toc: True
+    toc_depth: 2
+---
+
+# Libraries
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(readxl)
+library(survival)
+library(lubridate)
+library(Table1)
+library(survival)
+library(survMisc)
+
+source("../format_data.R")
+```
+
+
+# Data
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data <- read_excel("../../data/time_to_treatment_data.xlsx") %>% 
+  format_data(article_number = 3)
+
+curative <- data %>% 
+  filter(curative_palliative_status == "Curative")
+```
+
+
+# Table 1
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Skipping HIV+ only variables: cd4_final, hiv_cd4_cat, hiv_cd4_cat2, on_arv, vl_detect... See below for calculations for these variables
+
+quick.table(curative[, c("enroll_age", "age_cat", "marital", "cancer_screening", 
+                         "distance_factored2", "init_combined_cancer_stage", 
+                         "final_combined_cancer_stage", "cr_result", "hb_result", "neut_result", 
+                         "wbc_result", "alb_result", "init_performance_status", "hiv_status",
+                         "surgery_only", "rt", "chemo_only", "crt", "primary_surgery_chemo", 
+                         "primary_surgery_rt", "primary_surgery_crt", "path_treatment_30", 
+                         "path_treatment_60", "path_treatment_84", "path_treatment_90", 
+                         "path_treatment_120", "path_treatment_150", "path_treatment_180", 
+                         "pathology_year", "eqd2", "brachy_curr_dose", "ebrt_curr_dose", 
+                         "ebrt_boost_curr_dose", "total_chemo_received", "treat_response")])
+```
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# cd4_final
+# median
+sapply(select(filter(curative, hiv_status == "HIV-infected"), cd4_final), median, na.rm = T)
+# quantiles
+quantile(select(filter(curative,  hiv_status == "HIV-infected"), cd4_final), probs = c(0.25, 0.75), na.rm = T)
+
+# hiv_cd4_cat
+# counts
+curative %>% 
+  filter(hiv_status == "HIV-infected") %>% 
+  group_by(hiv_cd4_cat) %>% 
+  summarise(n())
+
+# hiv_cd4_cat2
+# counts
+curative %>% 
+  filter(hiv_status == "HIV-infected") %>% 
+  group_by(hiv_cd4_cat2) %>% 
+  summarise(n())
+
+# vl_final
+# mean
+sapply(select(filter(curative, hiv_status == "HIV-infected"), vl_final), median, na.rm = T)
+# quantiles
+quantile(select(filter(curative, hiv_status == "HIV-infected"), vl_final), probs = c(0.25, 0.75), na.rm = T)
+
+# on_arv
+curative %>% 
+  filter(hiv_status == "HIV-infected") %>% 
+  group_by(on_arv) %>% 
+  summarise(n())
+
+# vl_detect
+curative %>% 
+  filter(hiv_status == "HIV-infected") %>% 
+  group_by(vl_detect) %>% 
+  summarise(n())
+```

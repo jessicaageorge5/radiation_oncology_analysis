@@ -129,13 +129,8 @@ dmypy.json
 .pyre/
 
 # ignore folders
-figures_and_tables/*/other/
-chinmayee_project/
-india_project/
-juliet_project/
-rohini_project/
-surbhi_request_52521/
-surbhi_request_111321/
+figures_and_tables/*/archive/
+projects/
 data/
 .ipynb_checkpoints/
 **/.ipynb_checkpoints/

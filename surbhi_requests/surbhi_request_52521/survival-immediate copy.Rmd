@@ -1,0 +1,68 @@
+---
+title: "survival-immediate"
+author: "Jessica George"
+date: "6/9/2020"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r}
+library(plyr)
+library(tidyverse)
+library(survminer)
+library(survival)
+library(haven)
+library(finalfit)
+library(forestmodel)
+```
+
+```{r}
+curative <- read_csv("curative.csv")
+grover_data <- curative %>% 
+  mutate(time_alive_days = as.numeric(time_alive),
+         time_alive_months = as.numeric(time_alive)/30.417)
+```
+
+```{r}
+survival <- survfit(Surv(time_alive_months, dead5year) ~ 1, grover_data)
+
+overall_plot <- ggsurvplot(fit = survival,
+  grover_data,
+  xlab = "Months since last day of chemoradiation", 
+  ylab = "Proportion surviving",
+  title = "Kaplan-Meier survival estimates",
+  break.time.by = 12,
+  palette = "#000000",
+  conf.int = FALSE,
+  censor = FALSE,
+  legend = "none",
+  legend.labs = "",
+  risk.table = TRUE,
+  tables.theme = theme_cleantable())
+overall_plot$plot <- overall_plot$plot +
+  theme(panel.grid.major.y = element_line(color = "#EAF2F3"), plot.background = element_rect(fill = "#EAF2F3"), plot.title = element_text(hjust = 0.5), plot.margin = unit(c(0.25, 1, 0.25, 2.5), "cm"))
+overall_plot$table <- overall_plot$table + theme(plot.title = element_text(hjust = -0.42), plot.background = element_rect(fill = "#EAF2F3"), panel.background = element_rect(fill = "#EAF2F3"), plot.margin = unit(c(0.5, 1, 1.5, 2.5), "cm")) 
+overall_plot
+
+hiv_survival <- survfit(Surv(time_alive_months, dead5year) ~ xhiv3, grover_data)
+
+hiv_plot <- ggsurvplot(fit = hiv_survival,
+  grover_data,
+  xlab = "Months since last day of chemoradiation", 
+  ylab = "Proportion surviving",
+  title = "Kaplan-Meier survival estimates by HIV status",
+  break.time.by = 12,
+  palette = c("#0000FF", "#FF0000"),
+  conf.int = FALSE,
+  censor = FALSE,
+  legend.title="",
+  legend.labs = c("HIV-uninfected", "HIV-infected"),
+  risk.table = TRUE,
+  tables.theme = theme_cleantable())
+hiv_plot$plot <- hiv_plot$plot +
+  theme(panel.grid.major.y = element_line(color = "#EAF2F3"), plot.background = element_rect(fill = "#EAF2F3"), plot.title = element_text(hjust = 0.5), plot.margin = unit(c(0.2, 1, 0.2, 2.5), "cm"))
+hiv_plot$table <- hiv_plot$table + theme(plot.title = element_text(hjust = -0.55), plot.background = element_rect(fill = "#EAF2F3"), panel.background = element_rect(fill = "#EAF2F3"), plot.margin = unit(c(0.5, 1, 0.5, 2.5), "cm"))
+hiv_plot
+```
+

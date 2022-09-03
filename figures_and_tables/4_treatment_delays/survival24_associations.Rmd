@@ -1,0 +1,87 @@
+---
+title: "Table 3: Survival (24 months) Associations - Binomial Logistic Regression"
+author: "Jessica George"
+date: "01/29/22"
+output:
+  html_document:
+    toc: True
+    toc_depth: 2
+---
+
+# Libraries
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(readxl)
+library(survival)
+library(lubridate)
+library(gtsummary)
+
+source("../format_data.R")
+```
+
+
+# Data
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+original <- read_excel("../../data/time_to_treatment_data.xlsx") %>% 
+  format_data(article_number = 3)
+
+# grab RT/CRT patients only
+data <- original %>% filter(rt == "Yes" | crt == "Yes")
+```
+
+# Functions
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+overall_univariate_logistic_regresion <- function(resp, predictors) {
+  formula <- as.formula(paste(resp, predictors, sep = " ~ "))
+  overall.logist <- glm(formula, data = data, family = binomial)
+  return(overall.logist)
+}
+
+overall_multivariate_logistic_regresion <- function(resp, predictors) {
+  formula <- as.formula(paste(resp, paste(predictors, collapse = " + "), sep = " ~ "))
+  overall.logist <- glm(formula, data = data, family = binomial)
+  return(overall.logist)
+}
+
+# define univariate predictors
+uni_predictors <- c("enroll_age", "age_cat", "marital", "distance_factored2", 
+                    "init_performance_status", "hiv_status", "hiv_cd4_cat", "hiv_cd4_cat2",
+                    "cr_result", "cr_result_s100", "hb_result", "wbc_result", "wbc_result_s100",
+                    "neut_result", "neut_result_s100", "alb_result", "alb_result_s100",
+                    "init_combined_cancer_stage", "init_combined_cancer_stage2", "init_combined_cancer_stage3",
+                    "final_combined_cancer_stage", "final_combined_cancer_stage2", "final_combined_cancer_stage3",
+                    "total_chemo_received_cat", "total_chemo_received_4", "chemo", "eqd2",
+                    "eqd2_75", "eqd2_79", "eqd2_80", "pathology_group", "pathology_group2",
+                    "pathology_group3", "cancer_screening", "treat_response", "hiv_cd4_cat",
+                    "hiv_cd4_cat2", "curative_palliative", "path_treatment_30", "path_treatment_60",
+                    "path_treatment_90")
+
+uni_predictors2 <- c("path_treatment_120", "path_treatment_150", "path_treatment_180")
+```
+
+
+# Univariate Models
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+tbl_uvregression(data=data[c(c("vital_status24"), uni_predictors)],
+                 method = glm, 
+                 y = vital_status24,
+                 method.args=list(family=binomial),
+                 include = uni_predictors,
+                 hide_n = 2,
+                 exponentiate = TRUE,
+                 estimate_fun = function(x) style_ratio(x, digits = 3),
+                 pvalue_fun = function(x) style_pvalue(x, digits = 3)
+                )
+
+# run remaining variables in next run
+tbl_uvregression(data=data[c(c("vital_status24"), uni_predictors2)],
+                 method = glm, 
+                 y = vital_status24,
+                 method.args=list(family=binomial),
+                 include = uni_predictors2,
+                 hide_n = 2,
+                 exponentiate = TRUE,
+                 estimate_fun = function(x) style_ratio(x, digits = 3),
+                 pvalue_fun = function(x) style_pvalue(x, digits = 3)
+                )
+```

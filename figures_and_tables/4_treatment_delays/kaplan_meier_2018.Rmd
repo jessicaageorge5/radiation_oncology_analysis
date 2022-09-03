@@ -152,9 +152,51 @@ delay120_plot$table
 ```
 
 
-## 4) Survival status by Delay (120 days) and Stage
+## 4) Survival status by Delay (120 days) and Stage (initial, NA filled with final)
 ```{r echo=TRUE, fig.width=8, message=FALSE, warning=FALSE}
-delay120_stage_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_120 + combined_cancer_stage2, data_2018)
+delay120_stage_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_120 + init_combined_cancer_stage2, data_2018)
+
+delay120_stage_plot <- ggsurvplot(fit = delay120_stage_survival,
+                                  data_2018,
+                                  xlab = "Months since treatment initiation",
+                                  xlim = c(0, 24),
+                                  ylab = "Proportion surviving",
+                                  title = "Kaplan-Meier Survival Estimates by Delay (120 days) and Stage",
+                                  break.time.by = 3,
+                                  palette = c("#E69F00", "#009E73", "#56B4E9",
+                                              "#0072B2"),
+                                  conf.int = FALSE,
+                                  censor = TRUE,
+                                  legend.title="",
+                                  legend.labs = c("<120 days, Stage I-II", 
+                                                  "<120 days, Stage III-IV", 
+                                                  "≥120 days, Stage I-II", 
+                                                  "≥120 days, Stage III-IV"),
+                                  risk.table = TRUE,
+                                  risk.table.height = 0.2,
+                                  tables.theme = theme_cleantable())
+
+delay120_stage_plot$plot <- delay120_stage_plot$plot +
+  theme(plot.title = element_text(hjust = 0.4), 
+        panel.grid.major.y = element_line(color = "#EAF2F3"), 
+        plot.background = element_rect(fill = "#EAF2F3"), 
+        axis.title.y = element_text(vjust = 1))
+
+delay120_stage_plot$plot
+```
+```{r echo=TRUE, fig.height=2, fig.width=8, message=FALSE, warning=FALSE}
+delay120_stage_plot$table <- delay120_stage_plot$table + 
+  theme(plot.title = element_text(hjust = -0.25, size = 14), 
+        plot.background = element_rect(fill = "#EAF2F3"), 
+        panel.background = element_rect(fill = "#EAF2F3"))
+
+delay120_stage_plot$table
+```
+
+
+## 4-2) Survival status by Delay (120 days) and Stage (final, NA filled with initial)
+```{r echo=TRUE, fig.width=8, message=FALSE, warning=FALSE}
+delay120_stage_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_120 + final_combined_cancer_stage2, data_2018)
 
 delay120_stage_plot <- ggsurvplot(fit = delay120_stage_survival,
                                   data_2018,
@@ -237,48 +279,9 @@ print(obj)
 ```
 
 
-## 6) Survival status at 24 months by Delay (90 days)
+## 6a) Survival status by Delay (90 days) and Stage (initial, NA filled with final)
 ```{r echo=TRUE, fig.width=8, message=FALSE, warning=FALSE}
-delay90_survival24 <- survfit(Surv(time_alive_treat_mo24, vital_status24) ~ path_treatment_90, data_2018)
-
-delay90_surv24plot <- ggsurvplot(fit = delay90_survival24,
-                                 data_2018,
-                                 xlab = "Months since OS24",
-                                 xlim = c(0, 24),
-                                 ylab = "Proportion surviving",
-                                 title = "Kaplan-Meier Survival Estimates by Delay (90 days)",
-                                 break.time.by = 3,
-                                 palette = c("#56B4E9", "#0072B2"),
-                                 conf.int = FALSE,
-                                 censor = TRUE,
-                                 legend.title="",
-                                 legend.labs = c("Delay <90 days", "Delay ≥90 days"),
-                                 #legend.labs = c("No Delay", "Delay or Untreated"),
-                                 risk.table = TRUE,
-                                 risk.table.height = 0.2,
-                                 tables.theme = theme_cleantable())
-
-delay90_surv24plot$plot <- delay90_surv24plot$plot +
-  theme(plot.title = element_text(hjust = 0.4), 
-        panel.grid.major.y = element_line(color = "#EAF2F3"), 
-        plot.background = element_rect(fill = "#EAF2F3"), 
-        axis.title.y = element_text(vjust = 1))
-
-delay90_surv24plot$plot
-```
-```{r echo=TRUE, fig.height=2, fig.width=8, message=FALSE, warning=FALSE}
-delay90_surv24plot$table <- delay90_surv24plot$table + 
-  theme(plot.title = element_text(hjust = -0.24, size = 14), 
-        plot.background = element_rect(fill = "#EAF2F3"), 
-        panel.background = element_rect(fill = "#EAF2F3"))
-
-delay90_surv24plot$table
-```
-
-
-## 6a) Survival status by Delay (90 days) and Stage
-```{r echo=TRUE, fig.width=8, message=FALSE, warning=FALSE}
-delay90_stage_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90 + combined_cancer_stage2, data_2018)
+delay90_stage_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90 + init_combined_cancer_stage2, data_2018)
 
 print(delay90_stage_survival, print.rmean = TRUE)
 
@@ -320,10 +323,54 @@ delay90_stage_plot$table
 ```
 
 
-## 6b) Survival status by Delay (90 days) and Stage
+## 6a-2) Survival status by Delay (90 days) and Stage (final, NA filled with initial)
+```{r echo=TRUE, fig.width=8, message=FALSE, warning=FALSE}
+delay90_stage_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90 + final_combined_cancer_stage2, data_2018)
+
+print(delay90_stage_survival, print.rmean = TRUE)
+
+delay90_stage_plot <- ggsurvplot(fit = delay90_stage_survival,
+                                 data_2018,
+                                 xlab = "Months since treatment initiation",
+                                 xlim = c(0, 24),
+                                 ylab = "Proportion surviving",
+                                 title = "Kaplan-Meier Survival Estimates by Delay (90 days) and Stage",
+                                 break.time.by = 3,
+                                 palette = c("#E69F00", "#009E73", 
+                                             "#56B4E9", "#0072B2"),
+                                 conf.int = FALSE,
+                                 censor = TRUE,
+                                 legend.title="",
+                                 legend.labs = c("<90 days, Stage I-II", 
+                                                 "<90 days, Stage III-IV", 
+                                                 "≥90 days, Stage I-II", 
+                                                 "≥90 days, Stage III-IV"),
+                                 risk.table = TRUE,
+                                 risk.table.height = 0.2,
+                                 tables.theme = theme_cleantable())
+
+delay90_stage_plot$plot <- delay90_stage_plot$plot +
+  theme(plot.title = element_text(hjust = 0.4), 
+        panel.grid.major.y = element_line(color = "#EAF2F3"), 
+        plot.background = element_rect(fill = "#EAF2F3"), 
+        axis.title.y = element_text(vjust = 1))
+
+delay90_stage_plot$plot
+```
+```{r echo=TRUE, fig.height=2, fig.width=8, message=FALSE, warning=FALSE}
+delay90_stage_plot$table <- delay90_stage_plot$table + 
+  theme(plot.title = element_text(hjust = -0.15, size = 14), 
+        plot.background = element_rect(fill = "#EAF2F3"), 
+        panel.background = element_rect(fill = "#EAF2F3"))
+
+delay90_stage_plot$table
+```
+
+
+## 6b) Survival status by Delay (90 days) and Stage (initial, NA filled with final)
 ```{r echo=TRUE, fig.height=14, fig.width=16, message=FALSE, warning=FALSE}
 data_stage1 <- data_2018 %>% 
-  filter(combined_cancer_stage_exact_factored == "I (IA, IA1, IA2, IB1*, IB2, IB3)")
+  filter(init_combined_cancer_stage == "I (IB1*, IB2, IB3)")
 
 delay90_stage1_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90, data_stage1)
 
@@ -352,7 +399,7 @@ delay90_stage1_plot$plot <- delay90_stage1_plot$plot +
         axis.title.y = element_text(vjust = 1))
 
 data_stage2 <- data_2018 %>% 
-  filter(combined_cancer_stage_exact_factored == "II (IIA / IIB)")
+  filter(init_combined_cancer_stage == "II (IIA, IIB)")
 
 delay90_stage2_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90, data_stage2)
 
@@ -381,7 +428,7 @@ delay90_stage2_plot$plot <- delay90_stage2_plot$plot +
         axis.title.y = element_text(vjust = 1))
 
 data_stage3 <- data_2018 %>% 
-  filter(combined_cancer_stage_exact_factored == "III (IIIA / IIIB / IIIC)")
+  filter(init_combined_cancer_stage == "III (IIIA, IIIB, IIIC)")
 
 delay90_stage3_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90, data_stage3)
 
@@ -410,7 +457,7 @@ delay90_stage3_plot$plot <- delay90_stage3_plot$plot +
         axis.title.y = element_text(vjust = 1))
 
 data_stage4 <- data_2018 %>% 
-  filter(combined_cancer_stage_exact_factored == "IV (IVA / IVB)")
+  filter(init_combined_cancer_stage == "IV (IVA, IVB)")
 
 delay90_stage4_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90, data_stage4)
 
@@ -445,47 +492,170 @@ delay90_stage1_plot$plot + delay90_stage2_plot$plot +
 ```
 
 
-## 7) Survival status by Delay (90 days) and Palliative/Curative/Definitive
-```{r echo=TRUE, fig.width=8, message=FALSE, warning=FALSE}
-delay90_cpd_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90 + curative_palliative, data_2018)
+## 6b-2) Survival status by Delay (90 days) and Stage (final, NA filled with initial)
+```{r echo=TRUE, fig.height=14, fig.width=16, message=FALSE, warning=FALSE}
+data_stage1 <- data_2018 %>% 
+  filter(final_combined_cancer_stage == "I (IB1*, IB2, IB3)")
 
-delay90_cpd_plot <- ggsurvplot(fit = delay90_cpd_survival,
-                               data_2018,
-                               xlab = "Months since treatment initiation",
-                               xlim = c(0, 24),
-                               ylab = "Proportion surviving",
-                               title = "Kaplan-Meier Survival Estimates by Delay (90 days) and Treatment",
-                               break.time.by = 3,
-                               #palette = c("#E69F00", "#009E73", 
-                                           #"#56B4E9", "#0072B2"),
-                               conf.int = FALSE,
-                               censor = TRUE,
-                               legend.title="",
-                               legend.labs = c("<90 days, Palliative", 
-                                               "<90 days, Curative", 
-                                               "<90 days, Definitive", 
-                                               "≥90 days, Palliative",
-                                               "≥90 days, Curative",
-                                               "≥90 days, Definitive"),
-                              risk.table = TRUE,
-                              risk.table.height = 0.2,
-                              tables.theme = theme_cleantable())
+delay90_stage1_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90, data_stage1)
 
-delay90_cpd_plot$plot <- delay90_cpd_plot$plot +
+delay90_stage1_plot <- ggsurvplot(fit = delay90_stage1_survival,
+                                  data_stage1,
+                                  xlab = "Months since treatment initiation",
+                                  xlim = c(0, 24),
+                                  ylab = "Proportion surviving",
+                                  title = "Kaplan-Meier Survival Estimates for Stage I by Delay (90 days)",
+                                  break.time.by = 3,
+                                  palette = c("#E69F00", "#009E73"),
+                                  color = "path_treatment_90",
+                                  conf.int = FALSE,
+                                  censor = TRUE,
+                                  legend="none",
+                                  legend.title="",
+                                  legend.labs = c("<90 days", "≥90 days"),
+                                  risk.table = TRUE,
+                                  risk.table.height = 0.2,
+                                  tables.theme = theme_cleantable())
+
+delay90_stage1_plot$plot <- delay90_stage1_plot$plot +
   theme(plot.title = element_text(hjust = 0.4), 
         panel.grid.major.y = element_line(color = "#EAF2F3"), 
         plot.background = element_rect(fill = "#EAF2F3"), 
         axis.title.y = element_text(vjust = 1))
 
-delay90_cpd_plot$plot
+data_stage2 <- data_2018 %>% 
+  filter(final_combined_cancer_stage == "II (IIA, IIB)")
+
+delay90_stage2_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90, data_stage2)
+
+delay90_stage2_plot <- ggsurvplot(fit = delay90_stage2_survival,
+                                  data_stage2,
+                                  xlab = "Months since treatment initiation",
+                                  xlim = c(0, 24),
+                                  ylab = "Proportion surviving",
+                                  title = "Kaplan-Meier Survival Estimates for Stage II by Delay (90 days)",
+                                  break.time.by = 3,
+                                  palette = c("#E69F00", "#009E73"),
+                                  color = "path_treatment_90",
+                                  conf.int = FALSE,
+                                  censor = TRUE,
+                                  legend="none",
+                                  legend.title="",
+                                  legend.labs = c("<90 days", "≥90 days"),
+                                  risk.table = TRUE,
+                                  risk.table.height = 0.2,
+                                  tables.theme = theme_cleantable())
+
+delay90_stage2_plot$plot <- delay90_stage2_plot$plot +
+  theme(plot.title = element_text(hjust = 0.4), 
+        panel.grid.major.y = element_line(color = "#EAF2F3"), 
+        plot.background = element_rect(fill = "#EAF2F3"), 
+        axis.title.y = element_text(vjust = 1))
+
+data_stage3 <- data_2018 %>% 
+  filter(final_combined_cancer_stage == "III (IIIA, IIIB, IIIC)")
+
+delay90_stage3_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90, data_stage3)
+
+delay90_stage3_plot <- ggsurvplot(fit = delay90_stage3_survival,
+                                  data_stage3,
+                                  xlab = "Months since treatment initiation",
+                                  xlim = c(0, 24),
+                                  ylab = "Proportion surviving",
+                                  title = "Kaplan-Meier Survival Estimates for Stage III by Delay (90 days)",
+                                  break.time.by = 3,
+                                  palette = c("#E69F00", "#009E73"),
+                                  color = "path_treatment_90",
+                                  conf.int = FALSE,
+                                  censor = TRUE,
+                                  legend="none",
+                                  legend.title="",
+                                  legend.labs = c("<90 days", "≥90 days"),
+                                  risk.table = TRUE,
+                                  risk.table.height = 0.2,
+                                  tables.theme = theme_cleantable())
+
+delay90_stage3_plot$plot <- delay90_stage3_plot$plot +
+  theme(plot.title = element_text(hjust = 0.4), 
+        panel.grid.major.y = element_line(color = "#EAF2F3"), 
+        plot.background = element_rect(fill = "#EAF2F3"), 
+        axis.title.y = element_text(vjust = 1))
+
+data_stage4 <- data_2018 %>% 
+  filter(final_combined_cancer_stage == "IV (IVA, IVB)")
+
+delay90_stage4_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90, data_stage4)
+
+delay90_stage4_plot <- ggsurvplot(fit = delay90_stage4_survival,
+                                  data_stage4,
+                                  xlab = "Months since treatment initiation",
+                                  xlim = c(0, 24),
+                                  ylab = "Proportion surviving",
+                                  title = "Kaplan-Meier Survival Estimates for Stage IV by Delay (90 days)",
+                                  break.time.by = 3,
+                                  palette = c("#E69F00", "#009E73"),
+                                  color = "path_treatment_90",
+                                  conf.int = FALSE,
+                                  censor = TRUE,
+                                  legend="none",
+                                  legend.title="",
+                                  legend.labs = c("<90 days", "≥90 days"),
+                                  risk.table = TRUE,
+                                  risk.table.height = 0.2,
+                                  tables.theme = theme_cleantable())
+
+delay90_stage4_plot$plot <- delay90_stage4_plot$plot +
+  theme(plot.title = element_text(hjust = 0.4), 
+        panel.grid.major.y = element_line(color = "#EAF2F3"), 
+        plot.background = element_rect(fill = "#EAF2F3"), 
+        axis.title.y = element_text(vjust = 1))
+
+delay90_stage1_plot$plot + delay90_stage2_plot$plot + 
+  delay90_stage3_plot$plot + delay90_stage4_plot$plot +
+  plot_layout(guides = 'collect') & 
+  theme(legend.title = element_blank(), legend.position = 'top')
+```
+
+
+## 7) Survival status by Delay (90 days) and Cancer screening
+```{r echo=TRUE, fig.width=8, message=FALSE, warning=FALSE}
+delay90_cscrn_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90 + cancer_screening, data_2018)
+
+delay90_cscrn_plot <- ggsurvplot(fit = delay90_cscrn_survival,
+                               data_2018,
+                               xlab = "Months since treatment initiation",
+                               xlim = c(0, 24),
+                               ylab = "Proportion surviving",
+                               title = "Kaplan-Meier Survival Estimates by Delay (90 days) and Cancer Screening",
+                               break.time.by = 3,
+                               palette = c("#E69F00", "#009E73",
+                                           "#56B4E9", "#0072B2"),
+                               conf.int = FALSE,
+                               censor = TRUE,
+                               legend.title="",
+                               legend.labs = c("<90 days, Not Screened",
+                                               "<90 days, Screened",
+                                               "≥90 days, Not Screened",
+                                               "≥90 days, Screened"),
+                              risk.table = TRUE,
+                              risk.table.height = 0.2,
+                              tables.theme = theme_cleantable())
+
+delay90_cscrn_plot$plot <- delay90_cscrn_plot$plot +
+  theme(plot.title = element_text(hjust = 0.4), 
+        panel.grid.major.y = element_line(color = "#EAF2F3"), 
+        plot.background = element_rect(fill = "#EAF2F3"), 
+        axis.title.y = element_text(vjust = 1))
+
+delay90_cscrn_plot$plot
 ```
 ```{r echo=TRUE, fig.height=2, fig.width=8, message=FALSE, warning=FALSE}
-delay90_cpd_plot$table <- delay90_cpd_plot$table + 
+delay90_cscrn_plot$table <- delay90_cscrn_plot$table + 
   theme(plot.title = element_text(hjust = -0.25, size = 14), 
         plot.background = element_rect(fill = "#EAF2F3"), 
         panel.background = element_rect(fill = "#EAF2F3"))
 
-delay90_cpd_plot$table
+delay90_cscrn_plot$table
 ```
 
 
@@ -527,9 +697,9 @@ delay60_plot$table
 ```
 
 
-## 9) Survival status by Delay (60 days) and Stage
+## 9) Survival status by Delay (60 days) and Stage (initial, NA filled with final)
 ```{r echo=TRUE, fig.width=8, message=FALSE, warning=FALSE}
-delay60_stage_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_60 + combined_cancer_stage_exact_factored4, data_2018)
+delay60_stage_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_60 + init_combined_cancer_stage2, data_2018)
 
 delay60_stage_plot <- ggsurvplot(fit = delay60_stage_survival,
                                  data_2018,
@@ -545,6 +715,47 @@ delay60_stage_plot <- ggsurvplot(fit = delay60_stage_survival,
                                  legend.labs = c("<60 days, Stage I-II", 
                                                  "<60 days, Stage III-IV", 
                                                  "≥60 days, Stage I-II", "≥60 days, Stage III-IV"),
+                                risk.table = TRUE,
+                                risk.table.height = 0.2,
+                                tables.theme = theme_cleantable())
+
+delay60_stage_plot$plot <- delay60_stage_plot$plot +
+  theme(plot.title = element_text(hjust = 0.4), 
+        panel.grid.major.y = element_line(color = "#EAF2F3"), 
+        plot.background = element_rect(fill = "#EAF2F3"), 
+        axis.title.y = element_text(vjust = 1))
+
+delay60_stage_plot$plot
+```
+```{r echo=TRUE, fig.height=2, fig.width=8, message=FALSE, warning=FALSE}
+delay60_stage_plot$table <- delay60_stage_plot$table + 
+  theme(plot.title = element_text(hjust = -0.25, size = 14), 
+        plot.background = element_rect(fill = "#EAF2F3"), 
+        panel.background = element_rect(fill = "#EAF2F3"))
+
+delay60_stage_plot$table
+```
+
+
+## 9-2) Survival status by Delay (60 days) and Stage (final, NA filled with initial)
+```{r echo=TRUE, fig.width=8, message=FALSE, warning=FALSE}
+delay60_stage_survival <- survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_60 + final_combined_cancer_stage2, data_2018)
+
+delay60_stage_plot <- ggsurvplot(fit = delay60_stage_survival,
+                                 data_2018,
+                                 xlab = "Months since treatment initiation",
+                                 xlim = c(0, 24),
+                                 ylab = "Proportion surviving",
+                                 title = "Kaplan-Meier Survival Estimates by Delay (60 days) and Stage",
+                                 break.time.by = 3,
+                                 palette = c("#E69F00", "#009E73", "#56B4E9", "#0072B2"),
+                                 conf.int = FALSE,
+                                 censor = TRUE,
+                                 legend.title="",
+                                 legend.labs = c("<60 days, Stage I-II", 
+                                                 "<60 days, Stage III-IV", 
+                                                 "≥60 days, Stage I-II", 
+                                                 "≥60 days, Stage III-IV"),
                                 risk.table = TRUE,
                                 risk.table.height = 0.2,
                                 tables.theme = theme_cleantable())
@@ -666,13 +877,22 @@ survdiff(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_60, data_2018)
 summary(survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_30, data_2018) , times = c(2), extend = T)
 survdiff(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_30, data_2018)
 
-# By delay (120 days) and stage
-summary(survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_120 + combined_cancer_stage_exact_factored4, data_2018) , times = c(2), extend = T)
-survdiff(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_120 + combined_cancer_stage_exact_factored4, data_2018)
-# By delay (90 days) and stage
-summary(survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90 + combined_cancer_stage_exact_factored4, data_2018) , times = c(2), extend = T)
-survdiff(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90 + combined_cancer_stage_exact_factored4, data_2018)
-# By delay (60 days) and stage
-summary(survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_60 + combined_cancer_stage_exact_factored4, data_2018) , times = c(2), extend = T)
-survdiff(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_60 + combined_cancer_stage_exact_factored4, data_2018)
+# By delay (120 days) and stage (initial, NA filled with final)
+summary(survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_120 + init_combined_cancer_stage2, data_2018) , times = c(2), extend = T)
+survdiff(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_120 + init_combined_cancer_stage, data_2018)
+# By delay (120 days) and stage (final, NA filled with initial)
+summary(survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_120 + final_combined_cancer_stage2, data_2018) , times = c(2), extend = T)
+survdiff(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_120 + final_combined_cancer_stage, data_2018)
+# By delay (90 days) and stage (initial, NA filled with final)
+summary(survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90 + init_combined_cancer_stage2, data_2018) , times = c(2), extend = T)
+survdiff(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90 + init_combined_cancer_stage, data_2018)
+# By delay (90 days) and stage (final, NA filled with initial)
+summary(survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90 + final_combined_cancer_stage2, data_2018) , times = c(2), extend = T)
+survdiff(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_90 + final_combined_cancer_stage, data_2018)
+# By delay (60 days) and stage (initial, NA filled with final)
+summary(survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_60 + init_combined_cancer_stage2, data_2018) , times = c(2), extend = T)
+survdiff(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_60 + init_combined_cancer_stage, data_2018)
+# By delay (60 days) and stage (final, NA filled with initial)
+summary(survfit(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_60 + final_combined_cancer_stage2, data_2018) , times = c(2), extend = T)
+survdiff(Surv(time_alive_treat_mo, vital_status) ~ path_treatment_60 + final_combined_cancer_stage, data_2018)
 ```
