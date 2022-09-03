@@ -132,6 +132,7 @@ dmypy.json
 figures_and_tables/*/archive/
 projects/
 data/
+surbhi_requests/
 .ipynb_checkpoints/
 **/.ipynb_checkpoints/
 .DS_Store
