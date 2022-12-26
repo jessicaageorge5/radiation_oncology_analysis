@@ -108,6 +108,7 @@ group_summary(all_patients, quo(surgery_only))
 group_summary(all_patients, quo(rt))
 ## chemo
 group_summary(all_patients, quo(chemo_only))
+group_summary(all_patients, quo(chemo))
 ## CRT
 group_summary(all_patients, quo(crt))
 ## surgery and RT

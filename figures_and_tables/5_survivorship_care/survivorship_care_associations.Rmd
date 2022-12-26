@@ -38,9 +38,8 @@ tbl_uvregression(data=analysis_group1[c(c("criteria_1"), uni_predictors)],
                  y = criteria_1,
                  method.args=list(family=binomial),
                  include = uni_predictors,
-                 hide_n = 2,
                  exponentiate = TRUE,
-                 estimate_fun = function(x) style_ratio(x, digits = 3),
+                 estimate_fun = function(x) style_ratio(x, digits = 4),
                  pvalue_fun = function(x) style_pvalue(x, digits = 3)
                 ) %>% 
   bold_p(t = 0.05)
@@ -55,11 +54,20 @@ multi_mod2 <- glm(criteria_1 ~ age_cat + hiv_status + condensed_stage_eot + trt_
 
 AIC(multi_mod2)
 
+# same as 2, but add previous cancer screening
+multi_mod2_ <- glm(criteria_1 ~ age_cat + hiv_status + condensed_stage_eot + trt_type + cancer_screening, data=analysis_group1, family=binomial())
+
+AIC(multi_mod2_)
+
 multi_mod1 %>% 
   tbl_regression(exponentiate = TRUE) %>% 
   bold_p(t = 0.05)
 
 multi_mod2 %>% 
+  tbl_regression(exponentiate = TRUE) %>% 
+  bold_p(t = 0.05)
+
+multi_mod2_ %>% 
   tbl_regression(exponentiate = TRUE) %>% 
   bold_p(t = 0.05)
 ```
@@ -75,9 +83,8 @@ tbl_uvregression(data=analysis_group2[c(c("criteria_2"), uni_predictors)],
                  y = criteria_2,
                  method.args=list(family=binomial),
                  include = uni_predictors,
-                 hide_n = 2,
                  exponentiate = TRUE,
-                 estimate_fun = function(x) style_ratio(x, digits = 3),
+                 estimate_fun = function(x) style_ratio(x, digits = 4),
                  pvalue_fun = function(x) style_pvalue(x, digits = 3)
                 ) %>% 
   bold_p(t = 0.05)
@@ -101,4 +108,38 @@ multi_mod2 %>%
   bold_p(t = 0.05)
 ```
 
+# Associations with 2-yr and 3-5 year survivorship
+## Univariable
+```{r}
+analysis_group_composite <- data %>% 
+  filter(analysis2 == 1)
 
+tbl_uvregression(data=analysis_group2[c(c("criteria_composite"), uni_predictors)],
+                 method = glm, 
+                 y = criteria_composite,
+                 method.args=list(family=binomial),
+                 include = uni_predictors,
+                 exponentiate = TRUE,
+                 estimate_fun = function(x) style_ratio(x, digits = 4),
+                 pvalue_fun = function(x) style_pvalue(x, digits = 3)
+                ) %>% 
+  bold_p(t = 0.05)
+```
+## Multivariable
+```{r}
+multi_mod1 <- glm(criteria_composite ~ age_cat + hiv_status + condensed_stage_eot + chemo_4 + eqd2_75, data=analysis_group2, family=binomial())
+
+AIC(multi_mod1)
+
+multi_mod2 <- glm(criteria_composite ~ age_cat + hiv_status + condensed_stage_eot + trt_type, data=analysis_group2, family=binomial())
+
+AIC(multi_mod2)
+
+multi_mod1 %>% 
+  tbl_regression(exponentiate = TRUE) %>% 
+  bold_p(t = 0.05)
+
+multi_mod2 %>% 
+  tbl_regression(exponentiate = TRUE) %>% 
+  bold_p(t = 0.05)
+```

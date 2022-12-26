@@ -16,13 +16,13 @@ library(survival)
 library(lubridate)
 library(gtsummary)
 
-source("../format_data.R")
+source("../../format_data.R")
 ```
 
 
 # Data
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-original <- read_excel("../../data/time_to_treatment_data.xlsx") %>% 
+original <- read_excel("../../../data/time_to_treatment_data.xlsx") %>% 
   format_data(article_number = 3)
 
 # grab RT/CRT patients only

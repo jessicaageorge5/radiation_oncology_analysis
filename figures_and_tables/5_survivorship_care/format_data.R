@@ -41,7 +41,8 @@ format_data <- function(input_data) {
       eqd2_75 = relevel(factor(case_when(eqd2 < 75 ~ "<75",
                                          eqd2 >= 75 ~ ">=75")), ref="<75"),
       criteria_1 = relevel(factor(criteria_1), ref="N"),
-      criteria_2 = relevel(factor(criteria_2), ref="N")
+      criteria_2 = relevel(factor(criteria_2), ref="N"),
+      criteria_composite = relevel(factor(ifelse(criteria_1 == "Y" & criteria_2 == "Y", "Y", "N")), ref="N")
     )
   
   return(clean_data)

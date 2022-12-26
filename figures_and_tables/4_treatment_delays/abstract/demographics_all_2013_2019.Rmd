@@ -18,13 +18,13 @@ library(Table1)
 library(survival)
 library(survMisc)
 
-source("../format_data.R")
+source("../../format_data.R")
 ```
 
 
 # Data
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-data <- read_excel("../../data/time_to_treatment_data.xlsx") %>% 
+data <- read_excel("../../../data/time_to_treatment_data.xlsx") %>% 
   format_data(article_number = 3)
 ```
 

@@ -16,18 +16,19 @@ library(survival)
 library(lubridate)
 library(gtsummary)
 
-source("../format_data.R")
+source("../../format_data.R")
 ```
 
 
 # Data
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-original <- read_excel("../../data/time_to_treatment_data.xlsx") %>% 
+original <- read_excel("../../../data/time_to_treatment_data.xlsx") %>% 
   format_data(article_number = 3)
 
 # grab curative patients only
-data <- original %>% filter(curative_palliative_status == "Curative")
+data <- original %>% filter((crt == "Yes" | rt == "Yes") & curative_palliative_status == "Curative")
 ```
+
 
 # Functions
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
@@ -152,10 +153,9 @@ tbl_uvregression(data=data[c(c("path_treatment_180"), uni_predictors)],
 
 # Multivariate Model
 ```{r}
-multi_mod <- glm(path_treatment_90 ~ age_cat + distance_factored2 + hiv_status + final_combined_cancer_stage2, data=data, family=binomial())
+multi_mod <- glm(path_treatment_90 ~ age_cat + distance_factored2 + hiv_status + final_combined_cancer_stage + pathology_group2, data=data, family=binomial())
 
 multi_mod %>%
   tbl_regression(exponentiate = TRUE) %>%
   bold_p(t = 0.05)
 ```
-

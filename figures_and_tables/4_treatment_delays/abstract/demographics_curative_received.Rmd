@@ -18,17 +18,16 @@ library(Table1)
 library(survival)
 library(survMisc)
 
-source("../format_data.R")
+source("../../format_data.R")
 ```
 
 
 # Data
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-data <- read_excel("../../data/time_to_treatment_data.xlsx") %>% 
+data <- read_excel("../../../data/time_to_treatment_data.xlsx") %>% 
   format_data(article_number = 3)
 
-curative <- data %>% 
-  filter(curative_palliative_status == "Curative")
+curative_received <- original %>% filter((crt == "Yes" | rt == "Yes") & curative_palliative_status == "Curative")
 ```
 
 
@@ -36,7 +35,7 @@ curative <- data %>%
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 # Skipping HIV+ only variables: cd4_final, hiv_cd4_cat, hiv_cd4_cat2, on_arv, vl_detect... See below for calculations for these variables
 
-quick.table(curative[, c("enroll_age", "age_cat", "marital", "cancer_screening", 
+quick.table(curative_received[, c("enroll_age", "age_cat", "marital", "cancer_screening", 
                          "distance_factored2", "init_combined_cancer_stage", 
                          "final_combined_cancer_stage", "cr_result", "hb_result", "neut_result", 
                          "wbc_result", "alb_result", "init_performance_status", "hiv_status",
@@ -52,38 +51,38 @@ quick.table(curative[, c("enroll_age", "age_cat", "marital", "cancer_screening",
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 # cd4_final
 # median
-sapply(select(filter(curative, hiv_status == "HIV-infected"), cd4_final), median, na.rm = T)
+sapply(select(filter(curative_received, hiv_status == "HIV-infected"), cd4_final), median, na.rm = T)
 # quantiles
-quantile(select(filter(curative,  hiv_status == "HIV-infected"), cd4_final), probs = c(0.25, 0.75), na.rm = T)
+quantile(select(filter(curative_received,  hiv_status == "HIV-infected"), cd4_final), probs = c(0.25, 0.75), na.rm = T)
 
 # hiv_cd4_cat
 # counts
-curative %>% 
+curative_received %>% 
   filter(hiv_status == "HIV-infected") %>% 
   group_by(hiv_cd4_cat) %>% 
   summarise(n())
 
 # hiv_cd4_cat2
 # counts
-curative %>% 
+curative_received %>% 
   filter(hiv_status == "HIV-infected") %>% 
   group_by(hiv_cd4_cat2) %>% 
   summarise(n())
 
 # vl_final
 # mean
-sapply(select(filter(curative, hiv_status == "HIV-infected"), vl_final), median, na.rm = T)
+sapply(select(filter(curative_received, hiv_status == "HIV-infected"), vl_final), median, na.rm = T)
 # quantiles
-quantile(select(filter(curative, hiv_status == "HIV-infected"), vl_final), probs = c(0.25, 0.75), na.rm = T)
+quantile(select(filter(curative_received, hiv_status == "HIV-infected"), vl_final), probs = c(0.25, 0.75), na.rm = T)
 
 # on_arv
-curative %>% 
+curative_received %>% 
   filter(hiv_status == "HIV-infected") %>% 
   group_by(on_arv) %>% 
   summarise(n())
 
 # vl_detect
-curative %>% 
+curative_received %>% 
   filter(hiv_status == "HIV-infected") %>% 
   group_by(vl_detect) %>% 
   summarise(n())
